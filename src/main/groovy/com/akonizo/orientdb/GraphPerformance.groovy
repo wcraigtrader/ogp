@@ -5,11 +5,12 @@ import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory
 import org.hyperic.sigar.Sigar
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.hyperic.sigar.CpuInfo
+import org.slf4j.profiler.Profiler
 
 class GraphPerformance {
 
     final static Logger LOGGER = LoggerFactory.getLogger( GraphPerformance.class )
+    final static Profiler PROFILER = new Profiler( "GraphPerformance" )
 
     Random random
     String dbpath
@@ -24,35 +25,36 @@ class GraphPerformance {
     def createDatabase( String path ) {
         dbpath = path
 
-
     }
 
     def cleanup() {
 
     }
 
-    def showSysData() {
+    def logSystemInformation() {
         try {
             def sigar = new Sigar()
-            def infos = sigar.getCpuInfoList()
-            LOGGER.info( 'System: {}', infos[0] )
+            LOGGER.info( 'System:  {}', sigar.getCpuInfoList() )
+            LOGGER.info( 'Memory:  {}', sigar.getMem() )
 
         } catch ( Exception e ) {
-            LOGGER.error( "Sigar", e )
+            LOGGER.error( "Sigar failed", e )
         }
     }
 
     static void main( String[] args ) {
         GraphPerformance gp = new GraphPerformance()
         try {
-            gp.showSysData()
+            gp.logSystemInformation()
             gp.initialize( 123465798L )
             gp.createDatabase("memory:test")
-            LOGGER.info("Start graph performance test")
+            PROFILER.start("Create database")
 
-            LOGGER.info("Test complete")
         } finally {
+            PROFILER.start( "Database cleanup" )
             gp.cleanup()
+            PROFILER.stop()
+            LOGGER.info( "Profiler: {}", PROFILER )
         }
     }
 }
