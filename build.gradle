@@ -1,0 +1,21 @@
+apply plugin: 'groovy'
+apply plugin: 'application'
+
+sourceCompatibility = 1.7
+version = '1.0'
+
+repositories { mavenCentral() }
+
+dependencies {
+    compile ( 'com.orientechnologies:orientdb-graphdb:2.0.7' ) {
+        exclude module:'commons-logging'
+    }
+    compile 'org.slf4j:slf4j-api:1.7.+'
+
+    runtime 'org.slf4j:jcl-over-slf4j:1.7.+'
+    runtime 'ch.qos.logback:logback-classic:1.+'
+
+    testCompile 'junit:junit:4.11'
+}
+
+mainClassName = 'com.akonizo.orientdb.GraphPerformance'
