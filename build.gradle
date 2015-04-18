@@ -19,7 +19,7 @@ dependencies {
     runtime 'org.slf4j:jcl-over-slf4j:1.7.12'
     runtime 'org.slf4j:log4j-over-slf4j:1.7.12'
     runtime 'ch.qos.logback:logback-classic:1.1.3'
-    runtime fileTree(dir: "${rootDir}/lib/sigar/", exclude: "*.jar")
+    runtime fileTree(dir: "${rootDir}/lib/sigar", exclude: "*.jar")
 
     testCompile 'junit:junit:4.11'
 }

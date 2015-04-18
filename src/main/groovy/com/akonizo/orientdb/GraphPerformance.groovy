@@ -12,6 +12,7 @@ class GraphPerformance {
 
     final static Logger LOGGER = LoggerFactory.getLogger( GraphPerformance.class )
     static Profiler PROFILER
+    final static int POOLSIZE = 10
 
     Random random
     String dbpath
@@ -23,11 +24,24 @@ class GraphPerformance {
         random = new Random( seed )
     }
 
-    def createDatabase( String path ) {
-        dbpath = path
+    def createDatabase( String dbpath ) {
+        Database.delete_database( dbpath )
+        Database.create_database( dbpath )
+        Database.create_schema( dbpath )
+        Database.create_indexes( dbpath )
+
+        factory = new OrientGraphFactory(dbpath, 'admin', 'admin').setupPool(1, POOLSIZE)
     }
 
     def cleanup() {
+        if (graph != null) {
+            graph.shutdown()
+            graph = null
+        }
+        if (factory != null) {
+            factory.close()
+            factory = null
+        }
     }
 
     def logSystemInformation() {
