@@ -1,8 +1,18 @@
-.gradle
+# Gradle
+.gradle/
+build/
+
+# Eclipse
 .classpath
 .project
-.settings
-.idea
+.settings/
+bin/
+
+# Idea
 *.iml
+*.ipr
+*.iws
+.idea/
+
+# Application
 *.log
-build
