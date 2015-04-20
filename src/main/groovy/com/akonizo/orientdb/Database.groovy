@@ -76,8 +76,9 @@ public class Database {
 
             v = g.createVertexType("node", "V")
             v.createProperty("key", OType.STRING)
-            v.createProperty("created_on", OType.DATETIME)
-            v.createProperty("last_modified", OType.DATETIME)
+            v.createProperty("created", OType.DATETIME)
+            v.createProperty("updated", OType.DATETIME)
+            v.createProperty("data", OType.STRING )
 
             v = g.createVertexType( "foo", "node" )
             v = g.createVertexType( "bar", "node" )

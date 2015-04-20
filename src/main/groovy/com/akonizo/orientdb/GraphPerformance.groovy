@@ -11,17 +11,19 @@ import org.slf4j.profiler.Profiler
 class GraphPerformance {
 
     final static Logger LOGGER = LoggerFactory.getLogger( GraphPerformance.class )
+    
     static Profiler PROFILER
     final static int POOLSIZE = 10
 
-    Random random
+    Data data
     String dbpath
+    
 
     OrientGraphFactory factory
     OrientBaseGraph graph
 
     def initialize( long seed ) {
-        random = new Random( seed )
+        data = new Data( seed )
     }
 
     def createDatabase( String dbpath ) {
@@ -63,7 +65,8 @@ class GraphPerformance {
         try {
             gp.logSystemInformation()
             PROFILER = new Profiler( "GraphPerformance" )
-            gp.initialize( 123465798L )
+            PROFILER.start(  "Initialize" )
+            gp.initialize( 123465789L )
             PROFILER.start("Create database")
             gp.createDatabase("memory:test")
         } finally {
