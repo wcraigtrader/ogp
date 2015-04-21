@@ -7,32 +7,45 @@ class Data {
 
     final static Logger LOGGER = LoggerFactory.getLogger( Data.class )
 
+    static final String WORDLIST = "/words.txt"
+    
+    /** Center of Gaussian distribution */
     static final int CENTER = 6000
+    
+    /** Spread of Gaussian distribution */
     static final int SPREAD = 4000
     
+    /** Word list for node keys and data */
     static List<String> WORDS = null
+    
+    /** Types of nodes */
     static NODES = ['foo', 'bar', 'baz', 'quux']
+    
+    /** Types of edges */
     static EDGES = ['sees', 'hears', 'feels', 'smells', 'tastes']
 
+    /** Random number generator */
     Random rand
 
+    /** Seeded constructor */
     Data( long seed ) {
         this( new Random( seed ) )
     }
 
+    /** Random constructor */
     Data( Random r ) {
         this.rand = r
 
         if (WORDS == null) {
             LOGGER.debug( "Loading dictionary" )
             WORDS = new ArrayList<String>( 42000 )
-            this.getClass().getResourceAsStream( "/words.txt").eachLine { WORDS.add( it ) }
+            this.getClass().getResourceAsStream( WORDLIST ).eachLine { WORDS.add( it ) }
             LOGGER.debug( "Loaded {} words", WORDS.size() )
         }
     }
 
-    /** Return a simple graph that contains N edges */
-    def getSimpleGraph( int size=0 ) {
+    /** Return a radial graph that contains N edges */
+    def getRadialGraph( int size=0 ) {
         size = size ?: randomSize()
 
         def sg = new SubGraph( size )
@@ -41,7 +54,7 @@ class Data {
         for (int i=0; i < size; i++ ) {
             def petal = randomNode()
             while (petal == center) {
-                LOGGER.debug( "Skipping duplicate: {} == {}", center, petal )
+                LOGGER.info( "Skipping duplicate: {} == {}", center, petal )
                 petal = randomNode()
             }
             sg.nodes.add( petal )

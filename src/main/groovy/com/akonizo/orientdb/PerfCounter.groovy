@@ -51,7 +51,7 @@ class PerfCounter {
         }
     }
 
-    String csv() {
+    String metrics() {
         return String.format( "%d,%d,%f,%f,%f,%f", 
             nodes, edges, 
             node_time/MILLIS, edge_time/MILLIS, 
