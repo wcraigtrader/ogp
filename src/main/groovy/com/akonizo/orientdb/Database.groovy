@@ -22,7 +22,7 @@ public class Database {
         if (!(dbpath.startsWith('plocal:'))) {
             return
         }
-        
+
         OrientGraphFactory factory = null
 
         /* Gracefully wipe an existing database, if any */
@@ -84,7 +84,7 @@ public class Database {
             v = g.createVertexType( "bar", "node" )
             v = g.createVertexType( "baz", "node" )
             v = g.createVertexType( "quux", "node" )
-            
+
 
             e = g.createEdgeType("edge", "E")
             e.createProperty("began", OType.DATETIME)
@@ -95,10 +95,8 @@ public class Database {
             e = g.createEdgeType("feels", "edge" )
             e = g.createEdgeType("smells", "edge" )
             e = g.createEdgeType("tastes", "edge" )
-            
         } catch (Exception e) {
             e.printStackTrace()
-            
         } finally {
             g?.shutdown()
             factory?.close()
@@ -113,7 +111,7 @@ public class Database {
     /** Populate the indexes for a database */
     static public void create_indexes(String dbpath, boolean hashed) {
 
-        final Parameter<?, ?> UNIQUE_INDEX = new Parameter<String, String>("type", "UNIQUE")
+        final Parameter<?, ?> UNIQUE_INDEX = new Parameter<String, String>("type", "UNIQUE_HASH_INDEX") // was UNIQUE
 
         OrientGraphFactory factory = new OrientGraphFactory(dbpath, 'admin', 'admin' )
         OrientGraphNoTx g = null
@@ -125,10 +123,10 @@ public class Database {
             g.createKeyIndex("key", Vertex.class, new Parameter<String, String>("class", "bar"), UNIQUE_INDEX)
             g.createKeyIndex("key", Vertex.class, new Parameter<String, String>("class", "baz"), UNIQUE_INDEX)
             g.createKeyIndex("key", Vertex.class, new Parameter<String, String>("class", "quux"), UNIQUE_INDEX)
-            
+
         } catch (Exception e) {
             e.printStackTrace()
-            
+
         } finally {
             g?.shutdown()
             factory?.close()

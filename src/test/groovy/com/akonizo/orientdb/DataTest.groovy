@@ -1,6 +1,8 @@
 package com.akonizo.orientdb
 
 import static org.junit.Assert.*
+import static org.hamcrest.MatcherAssert.assertThat
+import static org.hamcrest.CoreMatchers.*
 
 import org.junit.Before
 import org.junit.Test
@@ -45,34 +47,15 @@ class DataTest {
     }
 
     @Test
-    void testNode0Data() {
-        def n = new Node( 'foo', 'ann' )
-        assertEquals( 'Type', 'foo', n.type )
-        assertEquals( 'Key', 'ann', n.key )
-        assertEquals( 'Data', '', n.data )
+    void testSimpleGraph() {
+        def size = 7
+        def sg = data.getSimpleGraph( size )
+        assertThat( sg.nodes.size(), is( size+1 ) )
+        assertThat( sg.edges.size(), is( size ) )
     }
 
     @Test
-    void testNode1Data() {
-        def n = new Node( 'foo', 'ann', 'one' )
-        assertEquals( 'Type', 'foo', n.type )
-        assertEquals( 'Key', 'ann', n.key )
-        assertEquals( 'Data', 'one', n.data )
-    }
-
-    @Test
-    void testNode2Data() {
-        def n = new Node( 'foo', 'ann', 'one', 'two' )
-        assertEquals( 'Type', 'foo', n.type )
-        assertEquals( 'Key', 'ann', n.key )
-        assertEquals( 'Data', 'one two', n.data )
-    }
-
-    @Test
-    void testNode3Data() {
-        def n = new Node( 'foo', 'ann', 'one', 'two', 'three' )
-        assertEquals( 'Type', 'foo', n.type )
-        assertEquals( 'Key', 'ann', n.key )
-        assertEquals( 'Data', 'one two three', n.data )
+    void testSubGraphConnected() {
+        def sg = data.getSimpleGraph( 7 )
     }
 }
