@@ -17,7 +17,7 @@ class DataTest {
 
     @Before
     void initialize() {
-        data = new Data( new Random( 123456789L ) )
+        data = new Data( 123456789L )
     }
 
     @Test

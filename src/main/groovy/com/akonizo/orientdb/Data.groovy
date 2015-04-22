@@ -1,5 +1,7 @@
 package com.akonizo.orientdb
 
+import org.apache.commons.math3.random.*
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -25,20 +27,20 @@ class Data {
     static EDGES = ['sees', 'hears', 'feels', 'smells', 'tastes']
 
     /** Random number generator */
-    Random rand
+    RandomGenerator rand
 
     /** Seeded constructor */
     Data( long seed ) {
-        this( new Random( seed ) )
+        this( new MersenneTwister( seed ) )
     }
 
     /** Random constructor */
-    Data( Random r ) {
+    Data( RandomGenerator r ) {
         this.rand = r
 
         if (WORDS == null) {
             LOGGER.debug( "Loading dictionary" )
-            WORDS = new ArrayList<String>( 42000 )
+            WORDS = new ArrayList<String>( 100000 )
             this.getClass().getResourceAsStream( WORDLIST ).eachLine { WORDS.add( it ) }
             LOGGER.info( "Loaded {} words", WORDS.size() )
         }
@@ -91,7 +93,7 @@ class Data {
     }
 
     def randomNode( ) {
-        return new MyNode( random( NODES ), random( WORDS), random( WORDS), random( WORDS ), random( WORDS ) )
+        return new MyNode( random( NODES ), random( WORDS ), random( WORDS ), random( WORDS ), random( WORDS ) )
     }
 
     def randomEdge( MyNode source, MyNode target ) {
