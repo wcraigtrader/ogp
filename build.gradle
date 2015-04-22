@@ -49,7 +49,7 @@ tasks.withType(GroovyCompile) {
 }
 
 run {
-    if ( project.hasProperty( 'MODEL' ) ) {
-        args( MODEL )
+    if ( project.hasProperty( 'model' ) ) {
+        args( model )
     }
 }

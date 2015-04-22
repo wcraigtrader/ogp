@@ -12,10 +12,10 @@ class Data {
     static final String WORDLIST = "/words.txt"
 
     /** Center of Gaussian distribution */
-    static final int CENTER = 6000
+    static final int CENTER = 500
 
     /** Spread of Gaussian distribution */
-    static final int SPREAD = 4000
+    static final int SPREAD = 100
 
     /** Word list for node keys and data */
     static List<String> WORDS = null
@@ -46,6 +46,93 @@ class Data {
         }
     }
 
+    /** Return an iterator for a graph model */
+    Iterator<SubGraph> getGraphs( String model, int count ) {
+        switch ( model ) {
+            case 'radial':
+                return radialGraphIterator( count )
+            case 'scatter':
+                return scatterGraphIterator( count )
+            case 'sprawl':
+                return sprawlGraphIterator( count )
+            case 'zaim' :
+                return zaimGraphIterator( count )
+            default:
+                throw new Exception( "Unrecognized graph model ($model)" )
+        }
+    }
+
+    /** Return an iterator for a radial graph model */
+    Iterator<SubGraph> radialGraphIterator( int count ) {
+        assert count > 0
+        return new Iterator<SubGraph>() {
+            int remaining = count
+            boolean hasNext() { remaining > 0 }
+            SubGraph next() { 
+                if (!hasNext() ) throw new NoSuchElementException()
+                remaining--
+                return getRadialGraph( CENTER, SPREAD ) 
+            }
+            void remove() { throw new UnsupportedOperationException() }
+        }
+    }
+        
+    /** Return an iterator for a scattered graph model */
+    Iterator<SubGraph> scatterGraphIterator( int count ) {
+        assert count > 0
+        return new Iterator<SubGraph>() {
+            int remaining = count
+            boolean hasNext() { remaining > 0 }
+            SubGraph next() { 
+                if (!hasNext() ) throw new NoSuchElementException()
+                remaining--
+                return getScatterGraph( CENTER, SPREAD ) 
+            }
+            void remove() { throw new UnsupportedOperationException() }
+        }
+    }
+
+    /** Return an iterator for a sprawled graph model */
+    Iterator<SubGraph> sprawlGraphIterator( int count ) {
+        assert count > 0
+        return new Iterator<SubGraph>() {
+            int remaining = count
+            boolean hasNext() { remaining > 0 }
+            SubGraph next() { 
+                if (!hasNext() ) throw new NoSuchElementException()
+                remaining--
+                return getSprawlGraph( CENTER, SPREAD ) 
+            }
+            void remove() { throw new UnsupportedOperationException() }
+        }
+    }
+
+    /** Return an iterator for a nexus graph model */
+    Iterator<SubGraph> zaimGraphIterator( int count ) {
+        assert count > 0
+        return new Iterator<SubGraph>() {
+            int position = 0, max = count
+            boolean hasNext() { position < max }
+            SubGraph next() { 
+                if (!hasNext() ) throw new NoSuchElementException()
+                switch (position++) {
+                    case 0: return getRadialGraph( 20000, 50 )
+                    case 1..100: return getScatterGraph( 300, 60 )
+                    case 101..200: return getScatterGraph( 400, 80 )
+                    case 201..300: return getScatterGraph( 500, 100 )
+                    case 301..400: return getScatterGraph( 600, 120 )
+                    default: return getScatterGraph( 700, 140 )
+                }
+            }
+            void remove() { throw new UnsupportedOperationException() }
+        }
+    }
+        
+    /** Return a radial graph that contains a random spread of edges */
+    def getRadialGraph( int center, int spread ) {
+        return getRadialGraph( randomSize( center, spread ) )
+    }
+    
     /** Return a radial graph that contains N edges */
     def getRadialGraph( int size=0 ) {
         size = size ?: randomSize()
@@ -65,6 +152,11 @@ class Data {
         return sg
     }
 
+    /** Return a scatter graph that contains a random spread of edges */
+    def getScatterGraph( int center, int spread ) {
+        return getScatterGraph( randomSize( center, spread ) )
+    }
+    
     /** Return a scatter graph that contains N edges */
     def getScatterGraph( int size=0 ) {
         size = size ?: randomSize()
@@ -87,9 +179,36 @@ class Data {
         }
         return sg
     }
-
+    
+    /** Return a sprawl graph that contains a random spread of edges */
+    def getSprawlGraph( int center, int spread ) {
+        return getSprawlGraph( randomSize( center, spread ) )
+    }
+    
+    /** Return a sprawling graph that contains N edges */
+    def getSprawlGraph( int size=0 ) {
+        size = size ?: randomSize()
+        
+        def sg = new SubGraph( size )
+        sg.nodes.add( randomNode() )
+        for (int i=1; i <= size; i++ ) {
+            def left = sg.nodes.get( rand.nextInt( i ) )
+            def right = randomNode()
+            while ( right == left ) {
+                LOGGER.info( "Skipping duplicate: {} == {}", left, right )
+                right = randomNode()
+            }
+            sg.nodes.add( right )
+            sg.edges.add( randomEdge( left, right ) )
+        }
+    }
+    
     int randomSize() {
-        return Math.max( 1, CENTER + SPREAD * rand.nextGaussian() )
+        return randomSize( CENTER, SPREAD )
+    }
+
+    int randomSize( int center, int spread ) {
+        return Math.max(1, center + spread * rand.nextGaussian() )
     }
 
     def randomNode( ) {

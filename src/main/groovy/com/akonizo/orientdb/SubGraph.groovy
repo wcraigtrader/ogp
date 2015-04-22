@@ -1,8 +1,8 @@
 package com.akonizo.orientdb
 
 class SubGraph {
-    Collection<MyNode> nodes
-    Collection<MyEdge> edges
+    ArrayList<MyNode> nodes
+    ArrayList<MyEdge> edges
 
     SubGraph( int size ) {
         nodes = new ArrayList<MyNode>( size+100 )

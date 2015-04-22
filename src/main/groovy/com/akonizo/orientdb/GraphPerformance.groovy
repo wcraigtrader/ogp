@@ -12,11 +12,11 @@ class GraphPerformance {
 
     final static Logger LOGGER = LoggerFactory.getLogger( GraphPerformance.class )
 
-    final static String DBPATH = "memory:test"
+    final static String DBPATH = 'memory:test'
     final static long SEED = 123456789L
-    final static int TRANSACTIONS = 50
-    final static String RESULTS_DIR = "results"
-    final static String DEFAULT_METRICS_FILE = "transactions.csv"
+    final static int TRANSACTIONS = 500
+    final static String RESULTS_DIR = 'results'
+    final static String DEFAULT_METRICS_FILE = 'transactions.csv'
 
     static PrintWriter metrics
     static String javaName, groovyName, orientName, osName
@@ -52,15 +52,9 @@ class GraphPerformance {
 
     /** Ingest some sub-graphs from the data provider */
     def ingestData( String model ) {
-        for ( int i=1; i <= TRANSACTIONS; i++) {
-            switch ( model ) {
-                case 'radial':
-                    ingestGraph( data.getRadialGraph(), i )
-                    break
-                case 'scatter':
-                    ingestGraph( data.getScatterGraph(), i )
-                    break
-            }
+        int i = 1
+        for (SubGraph sg : data.getGraphs( model, TRANSACTIONS ) ) {
+            ingestGraph( sg, i++ )
         }
     }
 
@@ -74,7 +68,7 @@ class GraphPerformance {
             perf = new PerfCounter()
             perf.nodes = sg.nodes.size()
             perf.edges = sg.edges.size()
-            LOGGER.debug( "Loading graph with {} nodes and {} edges", perf.nodes, perf.edges )
+            LOGGER.debug( 'Loading graph with {} nodes and {} edges', perf.nodes, perf.edges )
 
             for ( MyNode node : sg.nodes ) {
                 findOrCreateNode( node )
@@ -94,10 +88,10 @@ class GraphPerformance {
             metrics?.print( ',' )
             metrics?.println( perf.metrics() )
         } catch (IngestException e ) {
-            LOGGER.error( "During ingest: {}", e.getMessage() )
+            LOGGER.error( 'During ingest: {}', e.getMessage() )
             graph.rollback()
         } catch (Exception e ) {
-            LOGGER.error( "During ingest", e )
+            LOGGER.error( 'During ingest', e )
             graph.rollback()
         } finally {
             timestamp = null
@@ -112,7 +106,7 @@ class GraphPerformance {
             if (create) {
                 node = createNode( n )
             } else {
-                throw new IngestException( "Did not find ${n}" )
+                throw new IngestException( 'Did not find ${n}' )
             }
         } else {
             if (create) {
@@ -137,7 +131,7 @@ class GraphPerformance {
 
     /** Create a new node */
     OrientVertex createNode( MyNode n ) {
-        LOGGER.debug( "Creating node {}", n)
+        LOGGER.debug( 'Creating node {}', n)
         timestamp = timestamp ?: new Date()
         OrientVertex node = graph.addVertex( OrientBaseGraph.CLASS_PREFIX + n.type )
         def map = n.getProps()
@@ -150,7 +144,7 @@ class GraphPerformance {
 
     /** Update an existing node */
     void updateNode( OrientVertex node, MyNode n ) {
-        LOGGER.debug( "Updating node {}", n )
+        LOGGER.debug( 'Updating node {}', n )
         timestamp = timestamp ?: new Date()
         def map = n.getProps()
         map.remove( 'key' )
@@ -165,14 +159,14 @@ class GraphPerformance {
 
         OrientVertex src = findNode( e.source )
         if (src == null) {
-            throw new IngestException( String.format("Unable to find %s", e.source) )
+            throw new IngestException( String.format('Unable to find %s', e.source) )
         }
         OrientVertex tgt = findNode( e.target )
         if (tgt == null) {
-            throw new IngestException( String.format("Unable to find %s", e.target) )
+            throw new IngestException( String.format('Unable to find %s', e.target) )
         }
         if ( src == tgt ) {
-            throw new IngestException ( String.format( "No loopback edges allowed (%s == %s)", src, tgt ) )
+            throw new IngestException ( String.format( 'No loopback edges allowed (%s == %s)', src, tgt ) )
         }
 
         // NOTE: This is where the ingester spends 75+% of its time!!! 
@@ -202,29 +196,29 @@ class GraphPerformance {
 
     /** Create a new edge */
     OrientEdge createEdge( MyEdge e, OrientVertex src, OrientVertex tgt ) {
-        LOGGER.debug("Creating edge {}", e)
+        LOGGER.debug('Creating edge {}', e)
         OrientEdge edge = src.addEdge( e.type, tgt )
-        if ( e.began ) edge.setProperty( "began", e.began )
-        if ( e.ended ) edge.setProperty( "ended", e.ended )
+        if ( e.began ) edge.setProperty( 'began', e.began )
+        if ( e.ended ) edge.setProperty( 'ended', e.ended )
         edge.save()
         return edge
     }
 
     /** Update an existing edge */
     void updateEdge( OrientEdge edge, MyEdge e ) {
-        LOGGER.debug("Updating edge {}", e )
+        LOGGER.debug('Updating edge {}', e )
         def updated = false
         if (e.began != null) {
-            def began = edge.getProperty( "began" )
+            def began = edge.getProperty( 'began' )
             if (began == null || e.began < began ) {
-                edge.setProperty( "began", e.began )
+                edge.setProperty( 'began', e.began )
                 updated = true
             }
         }
         if (e.ended != null) {
-            def ended = edge.getProperty( "ended" )
+            def ended = edge.getProperty( 'ended' )
             if (ended == null || e.ended > ended ) {
-                edge.setProperty( "ended", e.ended )
+                edge.setProperty( 'ended', e.ended )
                 updated = true
             }
         }
@@ -251,7 +245,7 @@ class GraphPerformance {
             LOGGER.info( 'System:  {}', sigar.getCpuInfoList() )
             LOGGER.info( 'Memory:  {}', sigar.getMem() )
         } catch ( Exception e ) {
-            LOGGER.error( "Alas, Sigar failed to collect system information", e )
+            LOGGER.error( 'Alas, Sigar failed to collect system information', e )
         }
         
         def vendor = System.properties.get('java.vendor')
@@ -262,14 +256,14 @@ class GraphPerformance {
         def orient = OrientGraphFactory.class.package.implementationVersion
         LOGGER.info( 'OrientDB: {}', orient )
         
-        osName = System.getProperty( "os.name" ).replace( ' ', '').toLowerCase()
+        osName = System.getProperty( 'os.name' ).replace( ' ', '').toLowerCase()
         javaName = version.split('_')[0].replace('.', '' )
         groovyName = gv.replace('.', '')
         orientName = orient.replace( '.', '' )
     }
 
     static void main( String[] args ) {
-        def model = args.length > 0 ? args[0] : "radial"
+        def model = args.length > 0 ? args[0] : 'radial'
         
         gatherSystemInformation()
 
@@ -280,28 +274,30 @@ class GraphPerformance {
         }
         String metricsFileName = "${osName}-${model}-${orientName}-${groovyName}-${javaName}.csv"
         File metricsFile = new File( resultsDir, metricsFileName )
+        LOGGER.info('Logging metrics to {}', metricsFile.canonicalPath )
+        
         metrics = new PrintWriter( new FileWriter( metricsFile ) )
         metrics.println('Chunk,Nodes,Edges,Node Time (ms),Edge Time (ms),Average Node Time (ms),Average Edge Time (ms)')
 
 
-        Profiler profiler = new Profiler( "GraphPerformance" )
+        Profiler profiler = new Profiler( 'GraphPerformance' )
         GraphPerformance gp = new GraphPerformance( DBPATH )
         try {
-            profiler.start( "Initialize data" )
+            profiler.start( 'Initialize data' )
             gp.initialize( SEED )
 
-            profiler.start("Create database")
+            profiler.start('Create database')
             gp.createDatabase()
 
-            profiler.start("Ingest data")
+            profiler.start('Ingest data')
             gp.ingestData( model )
 
         } finally {
-            profiler.start( "Database cleanup" )
+            profiler.start( 'Database cleanup' )
             gp.cleanup()
 
             profiler.stop()
-            LOGGER.info( "{}", profiler )
+            LOGGER.info( '{}', profiler )
             metrics?.close()
         }
     }

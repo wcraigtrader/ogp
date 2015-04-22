@@ -9,7 +9,7 @@
             <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{22} - %m%n</pattern>
         </encoder>
         <file>performance.log</file>
-        <append>false</append>
+        <append>true</append>
     </appender>
 
     <logger name="com.akonizo" level="INFO" />

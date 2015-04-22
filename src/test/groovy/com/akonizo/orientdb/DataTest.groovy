@@ -43,19 +43,21 @@ class DataTest {
     @Test
     void testWords() {
         assertNotNull( 'WORDS', data.WORDS )
-        assertEquals( 'WORDS count', 41131, data.WORDS.size() )
+        assertThat( data.WORDS.size(), is (99561) )
     }
 
     @Test
-    void testSimpleGraph() {
+    void testRadialGraph() {
         def size = 7
-        def sg = data.getSimpleGraph( size )
+        def sg = data.getRadialGraph( size )
         assertThat( sg.nodes.size(), is( size+1 ) )
         assertThat( sg.edges.size(), is( size ) )
     }
-
+    
     @Test
-    void testSubGraphConnected() {
-        def sg = data.getSimpleGraph( 7 )
+    void testRadialGraphIterator() {
+        def i = data.radialGraphIterator( 7 )
+        def r = i.collect()
+        assertThat( r.size(), is( 7 ) )
     }
 }
