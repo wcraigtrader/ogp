@@ -4,6 +4,10 @@ Build and run with Gradle:
 
     ./gradlew run
     
+or
+
+    ./ogp
+    
 To run as a standalone application (for profiling):
 
     ./gradlew installApp

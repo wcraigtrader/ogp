@@ -1,0 +1,13 @@
+#! /bin/bash
+
+./gradlew -q run -POV=1.7.8 -PGV=1.8.9 -PMODEL=radial
+./gradlew -q run -POV=1.7.8 -PGV=1.8.9 -PMODEL=scatter
+
+./gradlew -q run -POV=2.0.7 -PGV=1.8.9 -PMODEL=radial
+./gradlew -q run -POV=2.0.7 -PGV=1.8.9 -PMODEL=scatter
+
+./gradlew -q run -POV=1.7.8 -PGV=2.4.3:indy -PMODEL=radial
+./gradlew -q run -POV=1.7.8 -PGV=2.4.3:indy -PMODEL=scatter
+
+./gradlew -q run -POV=2.0.7 -PGV=2.4.3:indy -PMODEL=radial
+./gradlew -q run -POV=2.0.7 -PGV=2.4.3:indy -PMODEL=scatter

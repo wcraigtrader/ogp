@@ -1,4 +1,7 @@
-def groovyVersion = '1.8.9' // '2.4.3:indy' // '2.4.3' // 
+// Allow selecting OrientDB and Groovy from the commandline
+def javaVersion = System.getProperty( 'java.version' )
+def groovyVersion = project.hasProperty("GV") ? GV : '1.8.9'
+def orientVersion = project.hasProperty('OV') ? OV : '2.0.7'
 
 apply plugin: 'groovy'
 apply plugin: 'application'
@@ -11,7 +14,7 @@ repositories { mavenCentral() }
 
 dependencies {
     compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
-    compile ( 'com.orientechnologies:orientdb-graphdb:2.0.7' ) { exclude module:'commons-logging' }
+    compile ( "com.orientechnologies:orientdb-graphdb:${orientVersion}" ) { exclude module:'commons-logging' }
     compile 'org.slf4j:slf4j-api:1.7.12'
     compile 'org.slf4j:slf4j-ext:1.7.12'
     compile files("${rootDir}/lib/sigar/sigar.jar")
@@ -23,7 +26,6 @@ dependencies {
 
     testCompile 'junit:junit:4.11'
     testCompile "org.hamcrest:hamcrest-core:1.3"
-    // testCompile "org.spockframework:spock-core:1.0-groovy-2.4"
 }
 
 // Ensure everything's using the same version of Groovy
@@ -37,11 +39,16 @@ configurations.all {
 
 // Use InvokeDynamic with Groovy, if available
 tasks.withType(GroovyCompile) {
-    def javaVersion = System.getProperty( 'java.version' )
     if (groovyVersion.endsWith( ':indy') && javaVersion >= '1.8.0') {
-        println "Enabling InvokeDynamic, Java ${javaVersion}, Groovy ${groovyVersion}"
+        println "Enabling InvokeDynamic, Java ${javaVersion}, Groovy ${groovyVersion}, OrientDB ${orientVersion}"
         groovyOptions.optimizationOptions.indy = true
     } else {
-        println "Skipping InvokeDynamic, Java ${javaVersion}, Groovy ${groovyVersion}"
+        println "Skipping InvokeDynamic, Java ${javaVersion}, Groovy ${groovyVersion}, OrientDB ${orientVersion}"
+    }
+}
+
+run {
+    if ( project.hasProperty( 'MODEL' ) ) {
+        args( MODEL )
     }
 }

@@ -8,19 +8,19 @@ class Data {
     final static Logger LOGGER = LoggerFactory.getLogger( Data.class )
 
     static final String WORDLIST = "/words.txt"
-    
+
     /** Center of Gaussian distribution */
     static final int CENTER = 6000
-    
+
     /** Spread of Gaussian distribution */
     static final int SPREAD = 4000
-    
+
     /** Word list for node keys and data */
     static List<String> WORDS = null
-    
+
     /** Types of nodes */
     static NODES = ['foo', 'bar', 'baz', 'quux']
-    
+
     /** Types of edges */
     static EDGES = ['sees', 'hears', 'feels', 'smells', 'tastes']
 
@@ -40,7 +40,7 @@ class Data {
             LOGGER.debug( "Loading dictionary" )
             WORDS = new ArrayList<String>( 42000 )
             this.getClass().getResourceAsStream( WORDLIST ).eachLine { WORDS.add( it ) }
-            LOGGER.debug( "Loaded {} words", WORDS.size() )
+            LOGGER.info( "Loaded {} words", WORDS.size() )
         }
     }
 
@@ -63,6 +63,29 @@ class Data {
         return sg
     }
 
+    /** Return a scatter graph that contains N edges */
+    def getScatterGraph( int size=0 ) {
+        size = size ?: randomSize()
+
+        def sg = new SubGraph( size )
+        for (int i=0; i < size; i++ ) {
+            def left = randomNode()
+            def right = randomNode()
+            while (left == right) {
+                LOGGER.info( "Skipping duplicate: {} == {}", left, right )
+                right = randomNode()
+            }
+            if (!(left in sg.nodes )) {
+                sg.nodes.add( left )
+            }
+            if (!(right in sg.nodes )) {
+                sg.nodes.add( right )
+            }
+            sg.edges.add( randomEdge( left, right ) )
+        }
+        return sg
+    }
+
     int randomSize() {
         return Math.max( 1, CENTER + SPREAD * rand.nextGaussian() )
     }
@@ -72,6 +95,7 @@ class Data {
     }
 
     def randomEdge( MyNode source, MyNode target ) {
+        assert source != target
         def type = random( EDGES )
         if ( type  == "tastes" ) {
             def now = new Date()
@@ -81,7 +105,7 @@ class Data {
     }
 
     String random( List<String> words ) {
-        return words[ rand.nextInt( words.size ) ]
+        return words[ rand.nextInt( words.size() ) ]
     }
 
     /** Simple Fibonacci numbers */
