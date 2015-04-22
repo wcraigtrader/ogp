@@ -201,6 +201,7 @@ class Data {
             sg.nodes.add( right )
             sg.edges.add( randomEdge( left, right ) )
         }
+        return sg
     }
     
     int randomSize() {
