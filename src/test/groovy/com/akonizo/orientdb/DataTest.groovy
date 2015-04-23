@@ -55,6 +55,20 @@ class DataTest {
     }
     
     @Test
+    void testScatterGraph() {
+        def size = 7
+        def sg = data.getScatterGraph( size )
+        assertThat( sg.edges.size(), is( size ) )
+    }
+    
+    @Test
+    void testSprawlGraph() {
+        def size = 7
+        def sg = data.getSprawlGraph( size )
+        assertThat( sg.edges.size(), is( size ) )
+    }
+
+    @Test
     void testRadialGraphIterator() {
         def r = []
         for (SubGraph g : data.radialGraphIterator( 7 ) ) {

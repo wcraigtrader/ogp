@@ -12,7 +12,7 @@ class Data {
     static final String WORDLIST = "/words.txt"
 
     /** Center of Gaussian distribution */
-    static final int CENTER = 500
+    static final int CENTER = 1000
 
     /** Spread of Gaussian distribution */
     static final int SPREAD = 100
@@ -95,14 +95,8 @@ class Data {
     Iterator<SubGraph> mixedGraphIterator( int count ) {
         return new SubGraphIterator( count ) {
             SubGraph nextGraph( int position ) {
-                switch (position) {
-                    case 0: return getRadialGraph( 20000, 50 )
-                    case 1..100: return getScatterGraph( 300, 60 )
-                    case 101..200: return getScatterGraph( 400, 80 )
-                    case 201..300: return getScatterGraph( 500, 100 )
-                    case 301..400: return getScatterGraph( 600, 120 )
-                    default: return getScatterGraph( 700, 140 )
-                }
+                if ( position == 0 ) return getRadialGraph( 20000, 50 )
+                return getScatterGraph( 500+50*((int) position/50 ), 5 )
             }
         }
     }
@@ -118,15 +112,17 @@ class Data {
 
         def sg = new SubGraph( size )
         def center = randomNode()
-        sg.nodes.add( center )
+        sg.add( center )
+        
+        def type = random( NODES )
         for (int i=0; i < size; i++ ) {
-            def petal = randomNode()
+            def petal = randomNode( type )
             while (petal == center) {
                 LOGGER.info( "Skipping duplicate: {} == {}", center, petal )
-                petal = randomNode()
+                petal = randomNode( type )
             }
-            sg.nodes.add( petal )
-            sg.edges.add( randomEdge( center, petal ) )
+            sg.add( petal )
+            sg.add( randomEdge( center, petal ) )
         }
         return sg
     }
@@ -141,6 +137,29 @@ class Data {
         size = size ?: randomSize()
 
         def sg = new SubGraph( size )
+        while (size > 0) {
+            def center = randomNode()
+            sg.add(  center )
+            def edges = Math.min(  size, rand.nextInt( 5 )+1 )
+            for (int i=0; i<edges;) {
+                def petal = randomNode()
+                if (petal == center) {
+                    LOGGER.info( "Skipping duplicate: {} == {}", center, petal )
+                    continue
+                }
+                sg.add( petal )
+                sg.add( randomEdge( center, petal ) )
+                i++
+            }
+            size -= edges
+        }
+        return sg
+    }
+
+    SubGraph getOldScatterGraph( int size=0 ) {
+        size = size ?: randomSize()
+
+        def sg = new SubGraph( size )
         for (int i=0; i < size; i++ ) {
             def left = randomNode()
             def right = randomNode()
@@ -149,12 +168,12 @@ class Data {
                 right = randomNode()
             }
             if (!(left in sg.nodes )) {
-                sg.nodes.add( left )
+                sg.add( left )
             }
             if (!(right in sg.nodes )) {
-                sg.nodes.add( right )
+                sg.add( right )
             }
-            sg.edges.add( randomEdge( left, right ) )
+            sg.add( randomEdge( left, right ) )
         }
         return sg
     }
@@ -169,7 +188,7 @@ class Data {
         size = size ?: randomSize()
 
         def sg = new SubGraph( size )
-        sg.nodes.add( randomNode() )
+        sg.add( randomNode() )
         for (int i=1; i <= size; i++ ) {
             def left = sg.nodes[ rand.nextInt( i ) ]
             def right = randomNode()
@@ -177,8 +196,8 @@ class Data {
                 LOGGER.info( "Skipping duplicate: {} == {}", left, right )
                 right = randomNode()
             }
-            sg.nodes.add( right )
-            sg.edges.add( randomEdge( left, right ) )
+            sg.add( right )
+            sg.add( randomEdge( left, right ) )
         }
         return sg
     }
@@ -191,8 +210,9 @@ class Data {
         return Math.max(1, center + spread * rand.nextGaussian() )
     }
 
-    def randomNode( ) {
-        return new MyNode( random( NODES ), random( WORDS ), randomData )
+    def randomNode( String t=null ) {
+        String type = t ?: random( NODES )
+        return new MyNode( type, randomKey(), randomData() )
     }
 
     def randomEdge( MyNode source, MyNode target ) {
@@ -205,6 +225,10 @@ class Data {
         return new MyEdge( type, source, target )
     }
 
+    String randomKey() {
+        return random( WORDS ) + '-' + random( WORDS )
+    }
+    
     String randomData() {
         return ( [ random( WORDS) ] * 100 ).join( ' ' )
     }
