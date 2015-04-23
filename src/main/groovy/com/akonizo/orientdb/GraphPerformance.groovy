@@ -83,10 +83,8 @@ class GraphPerformance {
             graph.commit()
             perf.doneWithCommit()
 
-            perf.log( LOGGER )
-            metrics?.print( count )
-            metrics?.print( ',' )
-            metrics?.println( perf.metrics() )
+            perf.log( LOGGER, count )
+            metrics?.println( perf.metrics( count ) )
         } catch (IngestException e ) {
             LOGGER.error( 'During ingest: {}', e.getMessage() )
             graph.rollback()

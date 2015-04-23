@@ -1,0 +1,15 @@
+#! /bin/bash
+
+ORIENTS="1.7.8 2.0.7"
+GROOVYS="1.8.9 2.4.3"
+MODELS="radial scatter sprawl mixed"
+
+rm -f performance.log
+
+for groovy in $GROOVYS ; do
+	for orient in $ORIENTS ; do
+		for model in $MODELS ; do
+			./gradlew -q run -PGV=${groovy} -POV=${orient} -Pmodel=${model}
+		done
+	done
+done

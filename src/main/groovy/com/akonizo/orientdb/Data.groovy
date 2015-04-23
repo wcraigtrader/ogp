@@ -212,7 +212,18 @@ class Data {
 
     def randomNode( String t=null ) {
         String type = t ?: random( NODES )
-        return new MyNode( type, randomKey(), randomData() )
+        def node = new MyNode( type, randomKey(), randomData() )
+        if (type == "foo" ) {
+            node.data1 = randomData( 10 )
+            node.data2 = randomData( 20 )
+            node.data3 = randomData( 30 )
+            node.data4 = randomData( 40 )
+            node.data5 = randomData( 50 )
+            node.data6 = randomData( 60 )
+            node.data7 = randomData( 70 )
+            node.data8 = randomData( 80 )
+        }
+        return node
     }
 
     def randomEdge( MyNode source, MyNode target ) {
@@ -229,8 +240,8 @@ class Data {
         return random( WORDS ) + '-' + random( WORDS )
     }
     
-    String randomData() {
-        return ( [ random( WORDS) ] * 100 ).join( ' ' )
+    String randomData( int size=8 ) {
+        return ( [ random( WORDS) ] * size ).join( ' ' )
     }
     
     String random( List<String> words ) {

@@ -81,6 +81,15 @@ public class Database {
             v.createProperty("data", OType.STRING )
 
             v = g.createVertexType( "foo", "node" )
+            v.createProperty("data1", OType.STRING )
+            v.createProperty("data2", OType.STRING )
+            v.createProperty("data3", OType.STRING )
+            v.createProperty("data4", OType.STRING )
+            v.createProperty("data5", OType.STRING )
+            v.createProperty("data6", OType.STRING )
+            v.createProperty("data7", OType.STRING )
+            v.createProperty("data8", OType.STRING )
+            
             v = g.createVertexType( "bar", "node" )
             v = g.createVertexType( "baz", "node" )
             v = g.createVertexType( "quux", "node" )

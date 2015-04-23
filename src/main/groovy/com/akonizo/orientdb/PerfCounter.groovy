@@ -41,19 +41,20 @@ class PerfCounter {
         edge_average = edges == 0 ? 0.0D : 1.0D * edge_time / edges
     }
 
-    def log( Logger logger ) {
+    def log( Logger logger, int count ) {
         if (logger.isInfoEnabled()) {
             StringBuilder sb = new StringBuilder()
-            sb.append( String.format( "%6d nodes / %8.3f ms = %.3f ms/node", nodes, node_time/MILLIS, node_average/MILLIS ))
-            sb.append( ", " )
-            sb.append( String.format( "%6d edges / %8.3f ms = %.3f ms/edge (%.1f)", edges, edge_time/MILLIS, edge_average/MILLIS, edge_average/edges ))
+            sb.append( String.format( '%4d) ', count ) )
+            sb.append( String.format( '%6d nodes / %8.3f ms = %.3f ms/node', nodes, node_time/MILLIS, node_average/MILLIS ))
+            sb.append( ', ' )
+            sb.append( String.format( '%6d edges / %8.3f ms = %.3f ms/edge (%.1f)', edges, edge_time/MILLIS, edge_average/MILLIS, edge_average/edges ))
             logger.info(sb.toString() )
         }
     }
 
-    String metrics() {
-        return String.format( "%d,%d,%f,%f,%f,%f", 
-            nodes, edges, 
+    String metrics( int count ) {
+        return String.format( '%d,%d,%d,%f,%f,%f,%f', 
+            count,nodes, edges, 
             node_time/MILLIS, edge_time/MILLIS, 
             node_average/MILLIS, edge_average/MILLIS )
     }
