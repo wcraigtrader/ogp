@@ -57,8 +57,8 @@ class Data {
                 return scatterGraphIterator( count )
             case 'sprawl':
                 return sprawlGraphIterator( count )
-            case 'zaim' :
-                return zaimGraphIterator( count )
+            case 'mixed' :
+                return mixedGraphIterator( count )
             default:
                 throw new Exception( "Unrecognized graph model ($model)" )
         }
@@ -92,7 +92,7 @@ class Data {
     }
 
     /** Return an iterator for a nexus graph model */
-    Iterator<SubGraph> zaimGraphIterator( int count ) {
+    Iterator<SubGraph> mixedGraphIterator( int count ) {
         return new SubGraphIterator( count ) {
             SubGraph nextGraph( int position ) {
                 switch (position) {
@@ -192,7 +192,7 @@ class Data {
     }
 
     def randomNode( ) {
-        return new MyNode( random( NODES ), random( WORDS ), random( WORDS ), random( WORDS ), random( WORDS ) )
+        return new MyNode( random( NODES ), random( WORDS ), randomData )
     }
 
     def randomEdge( MyNode source, MyNode target ) {
@@ -205,6 +205,10 @@ class Data {
         return new MyEdge( type, source, target )
     }
 
+    String randomData() {
+        return ( [ random( WORDS) ] * 100 ).join( ' ' )
+    }
+    
     String random( List<String> words ) {
         return words[ rand.nextInt( words.size() ) ]
     }

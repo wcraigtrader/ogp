@@ -5,19 +5,19 @@ rm -f performance.log
 ./gradlew -q run -POV=1.7.8 -PGV=1.8.9 -Pmodel=radial
 ./gradlew -q run -POV=1.7.8 -PGV=1.8.9 -Pmodel=scatter
 ./gradlew -q run -POV=1.7.8 -PGV=1.8.9 -Pmodel=sprawl
-./gradlew -q run -POV=1.7.8 -PGV=1.8.9 -Pmodel=zaim
+./gradlew -q run -POV=1.7.8 -PGV=1.8.9 -Pmodel=mixed
 
 ./gradlew -q run -POV=2.0.7 -PGV=1.8.9 -Pmodel=radial
 ./gradlew -q run -POV=2.0.7 -PGV=1.8.9 -Pmodel=scatter
 ./gradlew -q run -POV=2.0.7 -PGV=1.8.9 -Pmodel=sprawl
-./gradlew -q run -POV=2.0.7 -PGV=1.8.9 -Pmodel=zaim
+./gradlew -q run -POV=2.0.7 -PGV=1.8.9 -Pmodel=mixed
 
 ./gradlew -q run -POV=1.7.8 -PGV=2.4.3:indy -Pmodel=radial
 ./gradlew -q run -POV=1.7.8 -PGV=2.4.3:indy -Pmodel=scatter
 ./gradlew -q run -POV=1.7.8 -PGV=2.4.3:indy -Pmodel=sprawl
-./gradlew -q run -POV=1.7.8 -PGV=2.4.3:indy -Pmodel=zaim
+./gradlew -q run -POV=1.7.8 -PGV=2.4.3:indy -Pmodel=mixed
 
 ./gradlew -q run -POV=2.0.7 -PGV=2.4.3:indy -Pmodel=radial
 ./gradlew -q run -POV=2.0.7 -PGV=2.4.3:indy -Pmodel=scatter
 ./gradlew -q run -POV=2.0.7 -PGV=2.4.3:indy -Pmodel=sprawl
-./gradlew -q run -POV=2.0.7 -PGV=2.4.3:indy -Pmodel=zaim
+./gradlew -q run -POV=2.0.7 -PGV=2.4.3:indy -Pmodel=mixed
