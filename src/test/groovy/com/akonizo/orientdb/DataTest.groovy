@@ -56,8 +56,10 @@ class DataTest {
     
     @Test
     void testRadialGraphIterator() {
-        def i = data.radialGraphIterator( 7 )
-        def r = i.collect()
+        def r = []
+        for (SubGraph g : data.radialGraphIterator( 7 ) ) {
+            r.add( g )
+        }
         assertThat( r.size(), is( 7 ) )
     }
 }

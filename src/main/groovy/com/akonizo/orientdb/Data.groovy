@@ -41,7 +41,9 @@ class Data {
         if (WORDS == null) {
             LOGGER.debug( "Loading dictionary" )
             WORDS = new ArrayList<String>( 100000 )
-            this.getClass().getResourceAsStream( WORDLIST ).eachLine { WORDS.add( it ) }
+            this.getClass().getResourceAsStream( WORDLIST ).eachLine {
+                WORDS.add( it )
+            }
             LOGGER.info( "Loaded {} words", WORDS.size() )
         }
     }
@@ -64,58 +66,36 @@ class Data {
 
     /** Return an iterator for a radial graph model */
     Iterator<SubGraph> radialGraphIterator( int count ) {
-        assert count > 0
-        return new Iterator<SubGraph>() {
-            int remaining = count
-            boolean hasNext() { remaining > 0 }
-            SubGraph next() { 
-                if (!hasNext() ) throw new NoSuchElementException()
-                remaining--
-                return getRadialGraph( CENTER, SPREAD ) 
+        return new SubGraphIterator( count ) {
+            SubGraph nextGraph( int position ) {
+                return getRadialGraph( CENTER, SPREAD )
             }
-            void remove() { throw new UnsupportedOperationException() }
         }
     }
-        
+
     /** Return an iterator for a scattered graph model */
     Iterator<SubGraph> scatterGraphIterator( int count ) {
-        assert count > 0
-        return new Iterator<SubGraph>() {
-            int remaining = count
-            boolean hasNext() { remaining > 0 }
-            SubGraph next() { 
-                if (!hasNext() ) throw new NoSuchElementException()
-                remaining--
-                return getScatterGraph( CENTER, SPREAD ) 
+        return new SubGraphIterator( count ) {
+            SubGraph nextGraph( int position ) {
+                return getScatterGraph( CENTER, SPREAD )
             }
-            void remove() { throw new UnsupportedOperationException() }
         }
     }
 
     /** Return an iterator for a sprawled graph model */
     Iterator<SubGraph> sprawlGraphIterator( int count ) {
-        assert count > 0
-        return new Iterator<SubGraph>() {
-            int remaining = count
-            boolean hasNext() { remaining > 0 }
-            SubGraph next() { 
-                if (!hasNext() ) throw new NoSuchElementException()
-                remaining--
-                return getSprawlGraph( CENTER, SPREAD ) 
+        return new SubGraphIterator( count ) {
+            SubGraph nextGraph( int position ) {
+                return getSprawlGraph( CENTER, SPREAD )
             }
-            void remove() { throw new UnsupportedOperationException() }
         }
     }
 
     /** Return an iterator for a nexus graph model */
     Iterator<SubGraph> zaimGraphIterator( int count ) {
-        assert count > 0
-        return new Iterator<SubGraph>() {
-            int position = 0, max = count
-            boolean hasNext() { position < max }
-            SubGraph next() { 
-                if (!hasNext() ) throw new NoSuchElementException()
-                switch (position++) {
+        return new SubGraphIterator( count ) {
+            SubGraph nextGraph( int position ) {
+                switch (position) {
                     case 0: return getRadialGraph( 20000, 50 )
                     case 1..100: return getScatterGraph( 300, 60 )
                     case 101..200: return getScatterGraph( 400, 80 )
@@ -124,17 +104,16 @@ class Data {
                     default: return getScatterGraph( 700, 140 )
                 }
             }
-            void remove() { throw new UnsupportedOperationException() }
         }
     }
-        
+
     /** Return a radial graph that contains a random spread of edges */
-    def getRadialGraph( int center, int spread ) {
+    SubGraph getRadialGraph( int center, int spread ) {
         return getRadialGraph( randomSize( center, spread ) )
     }
-    
+
     /** Return a radial graph that contains N edges */
-    def getRadialGraph( int size=0 ) {
+    SubGraph getRadialGraph( int size=0 ) {
         size = size ?: randomSize()
 
         def sg = new SubGraph( size )
@@ -153,12 +132,12 @@ class Data {
     }
 
     /** Return a scatter graph that contains a random spread of edges */
-    def getScatterGraph( int center, int spread ) {
+    SubGraph getScatterGraph( int center, int spread ) {
         return getScatterGraph( randomSize( center, spread ) )
     }
-    
+
     /** Return a scatter graph that contains N edges */
-    def getScatterGraph( int size=0 ) {
+    SubGraph getScatterGraph( int size=0 ) {
         size = size ?: randomSize()
 
         def sg = new SubGraph( size )
@@ -179,20 +158,20 @@ class Data {
         }
         return sg
     }
-    
+
     /** Return a sprawl graph that contains a random spread of edges */
-    def getSprawlGraph( int center, int spread ) {
+    SubGraph getSprawlGraph( int center, int spread ) {
         return getSprawlGraph( randomSize( center, spread ) )
     }
-    
+
     /** Return a sprawling graph that contains N edges */
-    def getSprawlGraph( int size=0 ) {
+    SubGraph getSprawlGraph( int size=0 ) {
         size = size ?: randomSize()
-        
+
         def sg = new SubGraph( size )
         sg.nodes.add( randomNode() )
         for (int i=1; i <= size; i++ ) {
-            def left = sg.nodes.get( rand.nextInt( i ) )
+            def left = sg.nodes[ rand.nextInt( i ) ]
             def right = randomNode()
             while ( right == left ) {
                 LOGGER.info( "Skipping duplicate: {} == {}", left, right )
@@ -203,7 +182,7 @@ class Data {
         }
         return sg
     }
-    
+
     int randomSize() {
         return randomSize( CENTER, SPREAD )
     }
@@ -235,5 +214,33 @@ class Data {
         assert f <= 46
         if (f <= 1) return f
         return fib( f-1 ) + fib( f-2 )
+    }
+}
+
+class SubGraphIterator implements Iterator<SubGraph> {
+    
+    int supplied
+    int count
+    
+    SubGraphIterator( int size ) {
+        supplied = 0
+        count = size
+    }
+    
+    boolean hasNext() {
+        return supplied < count
+    }
+    
+    SubGraph next() {
+        if (!hasNext() ) throw new NoSuchElementException()
+        return nextGraph( supplied++ )
+    }
+    
+    SubGraph nextGraph( int position ) {
+        throw new UnsupportedOperationException()
+    }
+    
+    void remove() {
+        throw new UnsupportedOperationException()
     }
 }

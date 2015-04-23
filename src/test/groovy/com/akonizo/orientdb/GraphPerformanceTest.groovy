@@ -74,8 +74,8 @@ class GraphPerformanceTest {
     }
     
     @Test
-    void testIngestSimpleGraph() {
-        SubGraph s = gp.data.getSimpleGraph(21)
+    void testIngestRadialGraph() {
+        SubGraph s = gp.data.getRadialGraph(21)
         gp.ingestGraph( s )
         def nodes = gp.graph.getVerticesOfClass( 'node' ).collect()
         assertThat( nodes.size(), is( 21+1 ) )
