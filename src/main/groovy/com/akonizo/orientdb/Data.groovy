@@ -39,24 +39,28 @@ class Data {
         this.rand = r
 
         if (WORDS == null) {
-            LOGGER.debug( "Loading dictionary" )
-            WORDS = new ArrayList<String>( 100000 )
-            this.getClass().getResourceAsStream( WORDLIST ).eachLine {
-                WORDS.add( it )
-            }
-            LOGGER.info( "Loaded {} words", WORDS.size() )
+            loadWords()
         }
     }
 
+    def loadWords() {
+        LOGGER.debug( "Loading dictionary" )
+        WORDS = new ArrayList<String>( 100000 )
+        this.getClass().getResourceAsStream( WORDLIST ).eachLine {
+            WORDS.add( it )
+        }
+        LOGGER.info( "Loaded {} words", WORDS.size() )
+    }
+    
     /** Return an iterator for a graph model */
-    Iterator<SubGraph> getGraphs( String model, int count ) {
+    Iterator<SubGraph> getGraphs( String model, int count, int center=CENTER, int spread=SPREAD ) {
         switch ( model ) {
             case 'radial':
-                return radialGraphIterator( count )
+                return radialGraphIterator( count, center, spread )
             case 'scatter':
-                return scatterGraphIterator( count )
+                return scatterGraphIterator( count, center, spread )
             case 'sprawl':
-                return sprawlGraphIterator( count )
+                return sprawlGraphIterator( count, center, spread )
             case 'mixed' :
                 return mixedGraphIterator( count )
             default:
@@ -65,28 +69,28 @@ class Data {
     }
 
     /** Return an iterator for a radial graph model */
-    Iterator<SubGraph> radialGraphIterator( int count ) {
-        return new SubGraphIterator( count ) {
+    Iterator<SubGraph> radialGraphIterator( int count, int center=CENTER, int spread=SPREAD ) {
+        return new SubGraphIterator( count, center, spread ) {
             SubGraph nextGraph( int position ) {
-                return getRadialGraph( CENTER, SPREAD )
+                return getRadialGraph( center, spread )
             }
         }
     }
 
     /** Return an iterator for a scattered graph model */
-    Iterator<SubGraph> scatterGraphIterator( int count ) {
-        return new SubGraphIterator( count ) {
+    Iterator<SubGraph> scatterGraphIterator( int count, int center=CENTER, int spread=SPREAD ) {
+        return new SubGraphIterator( count, center, spread ) {
             SubGraph nextGraph( int position ) {
-                return getScatterGraph( CENTER, SPREAD )
+                return getScatterGraph( center, spread )
             }
         }
     }
 
     /** Return an iterator for a sprawled graph model */
-    Iterator<SubGraph> sprawlGraphIterator( int count ) {
-        return new SubGraphIterator( count ) {
+    Iterator<SubGraph> sprawlGraphIterator( int count, int center=CENTER, int spread=SPREAD ) {
+        return new SubGraphIterator( count, center, spread ) {
             SubGraph nextGraph( int position ) {
-                return getSprawlGraph( CENTER, SPREAD )
+                return getSprawlGraph( center, spread )
             }
         }
     }
@@ -260,10 +264,14 @@ class SubGraphIterator implements Iterator<SubGraph> {
     
     int supplied
     int count
+    int center
+    int spread
     
-    SubGraphIterator( int size ) {
+    SubGraphIterator( int size, int c=Data.CENTER, int s=Data.SPREAD ) {
         supplied = 0
         count = size
+        center = c
+        spread = s
     }
     
     boolean hasNext() {
