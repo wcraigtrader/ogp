@@ -1,13 +1,11 @@
 package com.akonizo.orientdb
 
+import groovy.util.logging.Slf4j
+
 import org.apache.commons.math3.random.*
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-
+@Slf4j
 class Data {
-
-    final static Logger LOGGER = LoggerFactory.getLogger( Data.class )
 
     static final String WORDLIST = "/words.txt"
 
@@ -36,6 +34,7 @@ class Data {
 
     /** Random constructor */
     Data( RandomGenerator r ) {
+        log.debug( "Constructed with ${r}" )
         this.rand = r
 
         if (WORDS == null) {
@@ -44,14 +43,12 @@ class Data {
     }
 
     def loadWords() {
-        LOGGER.debug( "Loading dictionary" )
+        log.debug( "Loading dictionary" )
         WORDS = new ArrayList<String>( 100000 )
-        this.getClass().getResourceAsStream( WORDLIST ).eachLine {
-            WORDS.add( it )
-        }
-        LOGGER.info( "Loaded {} words", WORDS.size() )
+        this.getClass().getResourceAsStream( WORDLIST ).eachLine { WORDS.add( it ) }
+        log.info( "Loaded ${WORDS.size} words" )
     }
-    
+
     /** Return an iterator for a graph model */
     Iterator<SubGraph> getGraphs( String model, int count, int center=CENTER, int spread=SPREAD ) {
         switch ( model ) {
@@ -73,47 +70,47 @@ class Data {
     /** Return an iterator for a radial graph model */
     Iterator<SubGraph> radialGraphIterator( int count, int center=CENTER, int spread=SPREAD ) {
         return new SubGraphIterator( count, center, spread ) {
-            SubGraph nextGraph( int position ) {
-                return getRadialGraph( center, spread )
-            }
-        }
+                    SubGraph nextGraph( int position ) {
+                        return getRadialGraph( center, spread )
+                    }
+                }
     }
 
     /** Return an iterator for a scattered graph model */
     Iterator<SubGraph> scatterGraphIterator( int count, int center=CENTER, int spread=SPREAD ) {
         return new SubGraphIterator( count, center, spread ) {
-            SubGraph nextGraph( int position ) {
-                return getScatterGraph( center, spread )
-            }
-        }
+                    SubGraph nextGraph( int position ) {
+                        return getScatterGraph( center, spread )
+                    }
+                }
     }
 
     /** Return an iterator for a sprawled graph model */
     Iterator<SubGraph> sprawlGraphIterator( int count, int center=CENTER, int spread=SPREAD ) {
         return new SubGraphIterator( count, center, spread ) {
-            SubGraph nextGraph( int position ) {
-                return getSprawlGraph( center, spread )
-            }
-        }
+                    SubGraph nextGraph( int position ) {
+                        return getSprawlGraph( center, spread )
+                    }
+                }
     }
 
     /** Return an iterator for a nexus graph model */
     Iterator<SubGraph> mixedGraphIterator( int count ) {
         return new SubGraphIterator( count ) {
-            SubGraph nextGraph( int position ) {
-                if ( position == 0 ) return getRadialGraph( 20000, 50 )
-                return getScatterGraph( 500+50*((int) position/50 ), 5 )
-            }
-        }
+                    SubGraph nextGraph( int position ) {
+                        if ( position == 1 ) return getRadialGraph( 20000, 50 )
+                        return getScatterGraph( 500+50*((int) (position-1)/50 ), 5 )
+                    }
+                }
     }
 
     /** Return an iterator for a nexus graph model */
     Iterator<SubGraph> fixed1GraphIterator( int count ) {
         return new SubGraphIterator( count ) {
-            SubGraph nextGraph( int position ) {
-                return getRadialGraph( 500+100*((int) position/100 ) )
-            }
-        }
+                    SubGraph nextGraph( int position ) {
+                        return getRadialGraph( 500+100*((int) (position-1)/100 ) )
+                    }
+                }
     }
 
     /** Return a radial graph that contains a random spread of edges */
@@ -128,12 +125,12 @@ class Data {
         def sg = new SubGraph( size )
         def center = randomNode()
         sg.add( center )
-        
+
         def type = random( NODES )
         for (int i=0; i < size; i++ ) {
             def petal = randomNode( type )
             while (petal == center) {
-                LOGGER.info( "Skipping duplicate: {} == {}", center, petal )
+                log.info( "Skipping duplicate: ${center} == ${petal}" )
                 petal = randomNode( type )
             }
             sg.add( petal )
@@ -159,7 +156,7 @@ class Data {
             for (int i=0; i<edges;) {
                 def petal = randomNode()
                 if (petal == center) {
-                    LOGGER.info( "Skipping duplicate: {} == {}", center, petal )
+                    log.info( "Skipping duplicate: ${center} == ${petal}" )
                     continue
                 }
                 sg.add( petal )
@@ -179,7 +176,7 @@ class Data {
             def left = randomNode()
             def right = randomNode()
             while (left == right) {
-                LOGGER.info( "Skipping duplicate: {} == {}", left, right )
+                log.info( "Skipping duplicate: ${left} == ${right}" )
                 right = randomNode()
             }
             if (!(left in sg.nodes )) {
@@ -207,8 +204,8 @@ class Data {
         for (int i=1; i <= size; i++ ) {
             def left = sg.nodes[ rand.nextInt( i ) ]
             def right = randomNode()
-            while ( right == left ) {
-                LOGGER.info( "Skipping duplicate: {} == {}", left, right )
+            while ( left == right ) {
+                log.info( "Skipping duplicate: ${left} == ${right}" )
                 right = randomNode()
             }
             sg.add( right )
@@ -254,11 +251,11 @@ class Data {
     String randomKey() {
         return random( WORDS ) + '-' + random( WORDS )
     }
-    
+
     String randomData( int size=8 ) {
-        return ( [ random( WORDS) ] * size ).join( ' ' )
+        return ( [random( WORDS)]* size ).join( ' ' )
     }
-    
+
     String random( List<String> words ) {
         return words[ rand.nextInt( words.size() ) ]
     }
@@ -272,32 +269,32 @@ class Data {
 }
 
 class SubGraphIterator implements Iterator<SubGraph> {
-    
+
     int supplied
     int count
     int center
     int spread
-    
+
     SubGraphIterator( int size, int c=Data.CENTER, int s=Data.SPREAD ) {
         supplied = 0
         count = size
         center = c
         spread = s
     }
-    
+
     boolean hasNext() {
         return supplied < count
     }
-    
+
     SubGraph next() {
         if (!hasNext() ) throw new NoSuchElementException()
-        return nextGraph( supplied++ )
+        return nextGraph( ++supplied )
     }
-    
+
     SubGraph nextGraph( int position ) {
         throw new UnsupportedOperationException()
     }
-    
+
     void remove() {
         throw new UnsupportedOperationException()
     }

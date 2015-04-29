@@ -1,16 +1,15 @@
 package com.akonizo.orientdb
 
+import groovy.util.logging.Slf4j
+
+import org.hyperic.sigar.Sigar
+import org.slf4j.profiler.Profiler
+
 import com.tinkerpop.blueprints.*
 import com.tinkerpop.blueprints.impls.orient.*
 
-import org.hyperic.sigar.Sigar
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import org.slf4j.profiler.Profiler
-
+@Slf4j
 class GraphPerformance {
-
-    final static Logger LOGGER = LoggerFactory.getLogger( GraphPerformance.class )
 
     final static String DBPATH = 'memory:test'
     final static long SEED = 123456789L
@@ -20,7 +19,7 @@ class GraphPerformance {
 
     static PrintWriter metrics
     static String javaName, groovyName, orientName, osName
-    
+
     Data data
     String dbpath
 
@@ -37,11 +36,14 @@ class GraphPerformance {
 
     /** Initialize the data provider */
     def initialize( long seed ) {
+        log.info( "initialize( ${seed} )" )
         data = new Data( seed )
+        log.info('initialized')
     }
 
     /** Create a fresh database, with schema and indexes */
     def createDatabase() {
+        log.info( "createDatabase( ${dbpath} )" )
         Database.delete_database( dbpath )
         Database.create_database( dbpath )
         Database.create_schema( dbpath )
@@ -52,10 +54,12 @@ class GraphPerformance {
 
     /** Ingest some sub-graphs from the data provider */
     def ingestData( String model ) {
+        log.info("Start ingesting data from ${model}" )
         int i = 1
         for (SubGraph sg : data.getGraphs( model, TRANSACTIONS ) ) {
             ingestGraph( sg, i++ )
         }
+        log.info('Ingestion complete' )
     }
 
     /** Ingest a single sub-graph, recording performance data */
@@ -68,7 +72,7 @@ class GraphPerformance {
             perf = new PerfCounter()
             perf.nodes = sg.nodes.size()
             perf.edges = sg.edges.size()
-            LOGGER.debug( 'Loading graph with {} nodes and {} edges', perf.nodes, perf.edges )
+            log.debug( 'Loading graph with {} nodes and {} edges', perf.nodes, perf.edges )
 
             for ( MyNode node : sg.nodes ) {
                 findOrCreateNode( node )
@@ -83,13 +87,13 @@ class GraphPerformance {
             graph.commit()
             perf.doneWithCommit()
 
-            perf.log( LOGGER, count )
+            perf.log( log, count )
             metrics?.println( perf.metrics( count ) )
         } catch (IngestException e ) {
-            LOGGER.error( 'During ingest: {}', e.getMessage() )
+            log.error( 'During ingest: {}', e.getMessage() )
             graph.rollback()
         } catch (Exception e ) {
-            LOGGER.error( 'During ingest', e )
+            log.error( 'During ingest', e )
             graph.rollback()
         } finally {
             timestamp = null
@@ -129,7 +133,7 @@ class GraphPerformance {
 
     /** Create a new node */
     OrientVertex createNode( MyNode n ) {
-        LOGGER.debug( 'Creating node {}', n)
+        log.debug( "Creating node ${n}" )
         timestamp = timestamp ?: new Date()
         OrientVertex node = graph.addVertex( OrientBaseGraph.CLASS_PREFIX + n.type )
         def map = n.getProps()
@@ -142,7 +146,7 @@ class GraphPerformance {
 
     /** Update an existing node */
     void updateNode( OrientVertex node, MyNode n ) {
-        LOGGER.debug( 'Updating node {}', n )
+        log.debug( "Updating node ${n}" )
         timestamp = timestamp ?: new Date()
         def map = n.getProps()
         map.remove( 'key' )
@@ -167,7 +171,7 @@ class GraphPerformance {
             throw new IngestException ( String.format( 'No loopback edges allowed (%s == %s)', src, tgt ) )
         }
 
-        // NOTE: This is where the ingester spends 75+% of its time!!! 
+        // NOTE: This is where the ingester spends 75+% of its time!!!
         for (Edge eraw : src.getEdges( tgt, Direction.BOTH, e.type ) ) {
             if ( eraw.getLabel() == e.type ) {
                 if (edge != null) {
@@ -194,7 +198,7 @@ class GraphPerformance {
 
     /** Create a new edge */
     OrientEdge createEdge( MyEdge e, OrientVertex src, OrientVertex tgt ) {
-        LOGGER.debug('Creating edge {}', e)
+        log.debug( "Creating edge ${e}" )
         OrientEdge edge = src.addEdge( e.type, tgt )
         if ( e.began ) edge.setProperty( 'began', e.began )
         if ( e.ended ) edge.setProperty( 'ended', e.ended )
@@ -204,7 +208,7 @@ class GraphPerformance {
 
     /** Update an existing edge */
     void updateEdge( OrientEdge edge, MyEdge e ) {
-        LOGGER.debug('Updating edge {}', e )
+        log.debug("Updating edge ${e}" )
         def updated = false
         if (e.began != null) {
             def began = edge.getProperty( 'began' )
@@ -240,20 +244,20 @@ class GraphPerformance {
     static void gatherSystemInformation() {
         try {
             def sigar = new Sigar()
-            LOGGER.info( 'System:  {}', sigar.getCpuInfoList() )
-            LOGGER.info( 'Memory:  {}', sigar.getMem() )
+            log.info( "System:  ${sigar.getCpuInfoList()[0]}" )
+            log.info( "Memory:  ${sigar.getMem()}" )
         } catch ( Exception e ) {
-            LOGGER.error( 'Alas, Sigar failed to collect system information', e )
+            log.error( 'Alas, Sigar failed to collect system information', e )
         }
-        
+
         def vendor = System.properties.get('java.vendor')
         def version = System.properties.get( 'java.version')
         def gv = Closure.class.package.implementationVersion
-        LOGGER.info( 'Java: {} {}, Groovy: {}', vendor, version, gv )
-        
+        log.info( "Java: ${vendor} ${version}, Groovy: ${gv}" )
+
         def orient = OrientGraphFactory.class.package.implementationVersion
-        LOGGER.info( 'OrientDB: {}', orient )
-        
+        log.info( "OrientDB: ${orient}" )
+
         osName = System.getProperty( 'os.name' ).replace( ' ', '').toLowerCase()
         javaName = version.split('_')[0].replace('.', '' )
         groovyName = gv.replace('.', '')
@@ -261,8 +265,15 @@ class GraphPerformance {
     }
 
     static void main( String[] args ) {
-        def model = args.length > 0 ? args[0] : 'radial'
-        
+        def model = 'radial'
+        def dbpath = DBPATH
+        switch (args.length) {
+            case 2:
+                dbpath = args[1]
+            case 1:
+                model = args[0]
+        }
+
         gatherSystemInformation()
 
         // Create a spreadsheet for capturing metrics
@@ -272,8 +283,8 @@ class GraphPerformance {
         }
         String metricsFileName = "${osName}-${model}-${orientName}-${groovyName}-${javaName}.csv"
         File metricsFile = new File( resultsDir, metricsFileName )
-        LOGGER.info('Logging metrics to {}', metricsFile.canonicalPath )
-        
+        log.info("Logging metrics to ${metricsFile.canonicalPath}" )
+
         metrics = new PrintWriter( new FileWriter( metricsFile ) )
         metrics.println('Chunk,Nodes,Edges,Node Time (ms),Edge Time (ms),Average Node Time (ms),Average Edge Time (ms)')
 
@@ -292,11 +303,12 @@ class GraphPerformance {
 
         } finally {
             profiler.start( 'Database cleanup' )
+            metrics?.close()
+
             gp.cleanup()
 
             profiler.stop()
-            LOGGER.info( '{}', profiler )
-            metrics?.close()
+            log.info( '${profiler}' )
         }
     }
 }

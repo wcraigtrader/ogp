@@ -1,16 +1,16 @@
 package com.akonizo.orientdb
 
-import static org.junit.Assert.*
-import static org.hamcrest.MatcherAssert.assertThat
 import static org.hamcrest.CoreMatchers.*
+import static org.hamcrest.MatcherAssert.assertThat
+import static org.junit.Assert.*
+import groovy.util.logging.Slf4j
+
+import org.junit.*
 
 import com.tinkerpop.blueprints.*
 import com.tinkerpop.blueprints.impls.orient.*
 
-import org.junit.*
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-
+@Slf4j
 class GraphPerformanceTest {
 
     GraphPerformance gp
@@ -45,11 +45,11 @@ class GraphPerformanceTest {
         assertThat( all.size(), is( 1 ) )
         assertThat( all[0].getProperty( 'data' ), is( 'someone' ) )
         assertThat( all[0], is( node ) )
-        
+
         def nodes = gp.graph.getVertices( 'foo.key', 'ann' ).collect()
         assertThat( nodes, hasItem( node ) )
         assertThat( nodes.size(), is( 1 ) )
-        
+
         def node2 = gp.findNode( ann )
         assertThat( node2, is( node ) )
     }
@@ -60,19 +60,19 @@ class GraphPerformanceTest {
         s.nodes.add( ann )
         s.nodes.add( bob )
         s.edges.add( new MyEdge( 'feels', ann, bob, new Date(), new Date() ) )
-        
+
         gp.ingestGraph( s )
 
         def nodes = gp.graph.getVerticesOfClass( 'foo' ).collect()
         assertThat( nodes.size(), is( 2 ) )
-        
+
         s.edges[0].ended = new Date()
         gp.ingestGraph( s )
 
         nodes = gp.graph.getVerticesOfClass( 'foo' ).collect()
         assertThat( nodes.size(), is( 2 ) )
     }
-    
+
     @Test
     void testIngestRadialGraph() {
         SubGraph s = gp.data.getRadialGraph(21)

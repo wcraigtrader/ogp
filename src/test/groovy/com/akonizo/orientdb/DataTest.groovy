@@ -1,17 +1,15 @@
 package com.akonizo.orientdb
 
-import static org.junit.Assert.*
-import static org.hamcrest.MatcherAssert.assertThat
 import static org.hamcrest.CoreMatchers.*
+import static org.hamcrest.MatcherAssert.assertThat
+import static org.junit.Assert.*
+import groovy.util.logging.Slf4j
 
 import org.junit.Before
 import org.junit.Test
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
+@Slf4j
 class DataTest {
-
-    final static Logger LOGGER = LoggerFactory.getLogger( DataTest.class )
 
     Data data
 
@@ -53,14 +51,14 @@ class DataTest {
         assertThat( sg.nodes.size(), is( size+1 ) )
         assertThat( sg.edges.size(), is( size ) )
     }
-    
+
     @Test
     void testScatterGraph() {
         def size = 7
         def sg = data.getScatterGraph( size )
         assertThat( sg.edges.size(), is( size ) )
     }
-    
+
     @Test
     void testSprawlGraph() {
         def size = 7

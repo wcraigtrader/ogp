@@ -1,17 +1,14 @@
 package com.akonizo.orientdb
 
-import static org.junit.Assert.*
-import static org.hamcrest.MatcherAssert.assertThat
 import static org.hamcrest.CoreMatchers.*
+import static org.hamcrest.MatcherAssert.assertThat
+import static org.junit.Assert.*
+import groovy.util.logging.Slf4j
 
-import org.junit.Before
 import org.junit.Test
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
+@Slf4j
 class MyNodeTest {
-
-    final static Logger LOGGER = LoggerFactory.getLogger( MyNodeTest.class )
 
     @Test
     void testNode0Data() {
