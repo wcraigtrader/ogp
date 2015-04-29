@@ -63,6 +63,8 @@ class Data {
                 return sprawlGraphIterator( count, center, spread )
             case 'mixed' :
                 return mixedGraphIterator( count )
+            case 'fixed1':
+                return fixed1GraphIterator( count )
             default:
                 throw new Exception( "Unrecognized graph model ($model)" )
         }
@@ -101,6 +103,15 @@ class Data {
             SubGraph nextGraph( int position ) {
                 if ( position == 0 ) return getRadialGraph( 20000, 50 )
                 return getScatterGraph( 500+50*((int) position/50 ), 5 )
+            }
+        }
+    }
+
+    /** Return an iterator for a nexus graph model */
+    Iterator<SubGraph> fixed1GraphIterator( int count ) {
+        return new SubGraphIterator( count ) {
+            SubGraph nextGraph( int position ) {
+                return getRadialGraph( 500+100*((int) position/100 ) )
             }
         }
     }

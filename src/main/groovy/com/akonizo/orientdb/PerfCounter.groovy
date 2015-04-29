@@ -47,7 +47,7 @@ class PerfCounter {
             sb.append( String.format( '%4d) ', count ) )
             sb.append( String.format( '%6d nodes / %8.3f ms = %.3f ms/node', nodes, node_time/MILLIS, node_average/MILLIS ))
             sb.append( ', ' )
-            sb.append( String.format( '%6d edges / %8.3f ms = %.3f ms/edge (%.1f)', edges, edge_time/MILLIS, edge_average/MILLIS, edge_average/edges ))
+            sb.append( String.format( '%6d edges / %8.3f ms = %.3f ms/edge', edges, edge_time/MILLIS, edge_average/MILLIS ))
             logger.info(sb.toString() )
         }
     }

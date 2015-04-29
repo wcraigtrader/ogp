@@ -1,22 +1,35 @@
-This project is intended to measure performance of OrientDB under specfic conditions.
+This project is intended to measure performance of OrientDB under specific conditions. Those conditions are similar to those of a proprietary application that is much larger and complex, and not sharable.
 
 Build and run with Gradle:
 
-    ./gradlew run
-    
-or
+    ./gradlew run [ -Pmodel=radial|scatter|sprawl|mixed ] [ -POV=<orient version> ] [ -PGV=<groovy version> ] 
 
-    ./ogp
-    
+or to run a series of models under varying conditions:
+
+    ./batch-run-models
+
+This has been tested with Orient versions 1.7.8 and 2.0.7, and Groovy versions 1.8.9 and 2.4.3.
+
 To run as a standalone application (for profiling):
 
-    ./gradlew installApp
-    build/install/orient-graph-performance/bin/orient-graph-performance
+    ./gradlew installApp [ -POV=<orient version> ] [ -PGV=<groovy version> ]
+    build/install/orient-graph-performance/bin/orient-graph-performance [ radial|scatter|sprawl|mixed ]
+
+Detailed data will be written to CSV files in the `results` directory.  The CSV files are manually combined into Excel worksheets with graphs for better visualization of the data. Logs are displayed and written to `performance.log`.
+
+## Performance Observations
+
+ * The *average* time to ingest a single node appears to be O(1), regardless of sub-graph size -- **this is good**.
+ * The *average* time to ingest a single edge appears to be O(E), where E is the number of edges already connected to the source node.
+ * Based upon profiling, the ingester is spending 75% or more of its time in `findOrCreateEdge()`, 
+   evaluating the iterator returned by `OrientVertex::getEdges()`. This iterator should only return 
+   0 or 1 edges, but it takes an inordinate amount of time to do so.
+ * The first dozen ingest operations have poor performance as the Java JIT is getting up-to-speed and optimizing.
 
 ## Theory of Operation
 
 This test suite creates a series of sub-graphs and then ingests those graphs 
-into a single graph database, no sharding, no clustering, no replication.
+into a single (in-memory) graph database, no sharding, no clustering, no replication.
 
  * Application node classes are descended from the Node class.
  * Application nodes are indexed by key, in separate indexes for each class.
@@ -30,7 +43,19 @@ into a single graph database, no sharding, no clustering, no replication.
 
 The suite measures the time in milliseconds necessary to ingest all of the nodes and 
 all of the edges for a given sub-graph and calculates the average time to ingest 
-a single node and edge, for a given transaction.
+a single node and edge, for a given transaction. The time to create the sub-graph is not included in the measurements.
+
+## Data Models
+
+There are a number of models that represent different types of sub-graphs that can be ingested by the application. Each run will ingest 500 sub-graphs, based upon the selected data model. While the sub-graphs are randomly generated, each run uses a fixed seed, so each set of graphs will be repeatable. The data models for individual graphs are:
+
+ * **radial** -- This produces a single central node, and then a number of nodes, each connected to the central node.
+ * **scatter** -- This produces a chain of nodes, with various branches along the way.
+ * **sprawl** -- Similar to scatter, with a different algorithm.
+ 
+ There are specific patterns of data available as well:
+ 
+ * **mixed** -- Starts with a large radial sub-graph, then a series of increasingly larger scatter sub-graph.
 
 ## Classes
 
@@ -39,13 +64,4 @@ a single node and edge, for a given transaction.
  * **Data** -- This class randomly creates sub-graphs, using a seeded random number generator, so every run will result in the same data.
  * **SubGraph**, **MyNode**, **MyEdge** -- These classes are POGOs to model a sub-graph.
  * **PerfCoounter** -- This class captures and formats metrics about each ingest.
-
-## Performance Observations
-
- * The *average* time to ingest a single node appears to be O(1), regardless of sub-graph size.
- * The *average* time to ingest a single edge appears to be O(E), where E is the number of edges in the sub-graph.
- * Alternately, the time to ingest a sub-graph appears to be O(N+E^2), where N is the number of nodes and E is the number of edges in the sub-graph.
- * Based upon profiling, the ingester is spending 75% or more of its time in `findOrCreateEdge()`, 
-   evaluating the iterator returned by `OrientVertex::getEdges()`. This iterator should only return 
-   0 or 1 edges, but it takes an inordinate amount of time to do so.
     
