@@ -59,7 +59,9 @@ There are a number of models that represent different types of sub-graphs that c
  There are specific patterns of data available as well:
  
  * **mixed** -- Starts with a large radial sub-graph, then a series of increasingly larger scatter sub-graphs.
- * **fixed1** -- 100 radial(500) + 100 radial(600) + 100 radial(700) + 100 radial(800) + 100 radial(900). *This model demonstrates the O(E) performance of the getEdges() method*.
+ * **light** -- Increasing sized radial graphs built with lightweight edges. *This model demonstrates the O(E) performance of the getEdges() method*.
+ * **heavy** -- Increasing sized radial graphs built with heavyweight edges. *This model demonstrates the O(E) performance of the getEdges() method*.
+ * **special** -- Constant size radial graphs built with heavyweight edges.
 
 ## Classes
 
