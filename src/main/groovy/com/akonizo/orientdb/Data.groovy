@@ -60,8 +60,12 @@ class Data {
                 return sprawlGraphIterator( count, center, spread )
             case 'mixed' :
                 return mixedGraphIterator( count )
-            case 'fixed1':
-                return fixed1GraphIterator( count )
+            case 'light':
+                return lightEdgeGraphIterator( count )
+            case 'heavy':
+                return heavyEdgeGraphIterator( count )
+            case 'special':
+                return specialGraphIterator( count )
             default:
                 throw new Exception( "Unrecognized graph model ($model)" )
         }
@@ -94,7 +98,7 @@ class Data {
                 }
     }
 
-    /** Return an iterator for a nexus graph model */
+    /** Return an iterator for a mixed graph model */
     Iterator<SubGraph> mixedGraphIterator( int count ) {
         return new SubGraphIterator( count ) {
                     SubGraph nextGraph( int position ) {
@@ -104,37 +108,57 @@ class Data {
                 }
     }
 
-    /** Return an iterator for a nexus graph model */
-    Iterator<SubGraph> fixed1GraphIterator( int count ) {
+    /** Return an iterator for a lightweight edge graph model */
+    Iterator<SubGraph> lightEdgeGraphIterator( int count ) {
         return new SubGraphIterator( count ) {
                     SubGraph nextGraph( int position ) {
-                        return getRadialGraph( 500+100*((int) (position-1)/100 ) )
+                        return getRadialGraph( 500+100*((int) (position-1)/100 ), 'sees' )
+                    }
+                }
+    }
+
+    /** Return an iterator for a heavyweight edge graph model */
+    Iterator<SubGraph> heavyEdgeGraphIterator( int count ) {
+        return new SubGraphIterator( count ) {
+                    SubGraph nextGraph( int position ) {
+                        return getRadialGraph( 500+100*((int) (position-1)/100 ), 'tastes' )
+                    }
+                }
+    }
+
+    /** Return an iterator for a heavyweight edge graph model */
+    Iterator<SubGraph> specialGraphIterator( int count ) {
+        return new SubGraphIterator( count ) {
+                    SubGraph nextGraph( int position ) {
+                        return getRadialGraph( 500, 'tastes' )
                     }
                 }
     }
 
     /** Return a radial graph that contains a random spread of edges */
-    SubGraph getRadialGraph( int center, int spread ) {
-        return getRadialGraph( randomSize( center, spread ) )
+    SubGraph getRadialGraph( int center, int spread, String et ) {
+        return getRadialGraph( randomSize( center, spread ), et )
     }
 
     /** Return a radial graph that contains N edges */
-    SubGraph getRadialGraph( int size=0 ) {
+    SubGraph getRadialGraph( int size=0, String et=null ) {
         size = size ?: randomSize()
+        def etype = et ?: random( EDGES )
+        if (etype == 'tastes') {
+            log.debug( "Creating edges with timestamps" )
+        }
 
         def sg = new SubGraph( size )
         def center = randomNode()
         sg.add( center )
-
-        def type = random( NODES )
         for (int i=0; i < size; i++ ) {
-            def petal = randomNode( type )
+            def petal = randomNode()
             while (petal == center) {
                 log.info( "Skipping duplicate: ${center} == ${petal}" )
-                petal = randomNode( type )
+                petal = randomNode()
             }
             sg.add( petal )
-            sg.add( randomEdge( center, petal ) )
+            sg.add( randomEdge( center, petal, etype ) )
         }
         return sg
     }
@@ -238,9 +262,9 @@ class Data {
         return node
     }
 
-    def randomEdge( MyNode source, MyNode target ) {
+    def randomEdge( MyNode source, MyNode target, String t=null ) {
         assert source != target
-        def type = random( EDGES )
+        def type = t ?: random( EDGES )
         if ( type  == "tastes" ) {
             def now = new Date()
             return new MyEdge( type, source, target, now, now )

@@ -16,3 +16,7 @@ bin/
 
 # Application
 *.log
+
+#Temporary
+~*
+.DS_Store

@@ -19,8 +19,11 @@ Detailed data will be written to CSV files in the `results` directory.  The CSV 
 
 ## Performance Observations
 
- * The *average* time to ingest a single node appears to be O(1), regardless of sub-graph size -- **this is good**.
- * The *average* time to ingest a single edge appears to be O(E), where E is the number of edges already connected to the source node.
+ * Orient 2.0.7 performs better than 1.8.9, in general.
+ * Groovy 2.4.3 performs better than 1.8.9, when run without invokedynamic.
+ * The *average* time to ingest a single node *appears* to be O(1), regardless of sub-graph size -- **this is good**.
+ * The *average* time to ingest a single edge *appears* to be O(E), where E is the number of edges already connected to the source node.
+ * The *average* time to ingest a single heavyweight edge appears to be 2.85 times longer than for lightweight edges.
  * Based upon profiling, the ingester is spending 75% or more of its time in `findOrCreateEdge()`, 
    evaluating the iterator returned by `OrientVertex::getEdges()`. This iterator should only return 
    0 or 1 edges, but it takes an inordinate amount of time to do so.
@@ -50,12 +53,13 @@ a single node and edge, for a given transaction. The time to create the sub-grap
 There are a number of models that represent different types of sub-graphs that can be ingested by the application. Each run will ingest 500 sub-graphs, based upon the selected data model. While the sub-graphs are randomly generated, each run uses a fixed seed, so each set of graphs will be repeatable. The data models for individual graphs are:
 
  * **radial** -- This produces a single central node, and then a number of nodes, each connected to the central node.
- * **scatter** -- This produces a chain of nodes, with various branches along the way.
- * **sprawl** -- Similar to scatter, with a different algorithm.
+ * **scatter** -- This produces a collection of small graphs, not connected.
+ * **sprawl** -- This produces a chain of nodes, with various branches along the way.
  
  There are specific patterns of data available as well:
  
- * **mixed** -- Starts with a large radial sub-graph, then a series of increasingly larger scatter sub-graph.
+ * **mixed** -- Starts with a large radial sub-graph, then a series of increasingly larger scatter sub-graphs.
+ * **fixed1** -- 100 radial(500) + 100 radial(600) + 100 radial(700) + 100 radial(800) + 100 radial(900). *This model demonstrates the O(E) performance of the getEdges() method*.
 
 ## Classes
 
