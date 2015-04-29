@@ -308,7 +308,7 @@ class GraphPerformance {
             gp.cleanup()
 
             profiler.stop()
-            log.info( '${profiler}' )
+            log.info( "${profiler}" )
         }
     }
 }
