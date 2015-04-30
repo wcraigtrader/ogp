@@ -174,10 +174,8 @@ class GraphPerformance {
         // NOTE: This is where the ingester spends 75+% of its time!!!
         for (Edge eraw : src.getEdges( tgt, Direction.BOTH, e.type ) ) {
             if ( eraw.getLabel() == e.type ) {
-                if (edge != null) {
-                    throw new IngestException( "Multiple edges match ${e}" )
-                }
                 edge = (OrientEdge) eraw
+                break
             }
         }
 
