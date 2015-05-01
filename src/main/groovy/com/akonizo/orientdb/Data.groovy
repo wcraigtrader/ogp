@@ -136,7 +136,7 @@ class Data {
     }
 
     /** Return a radial graph that contains a random spread of edges */
-    SubGraph getRadialGraph( int center, int spread, String et ) {
+    SubGraph getRadialGraph( int center, int spread, String et=null ) {
         return getRadialGraph( randomSize( center, spread ), et )
     }
 
