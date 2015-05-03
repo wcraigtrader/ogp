@@ -20,6 +20,9 @@ public class Database {
     /** Datebase Time Format */
     public static final String DATETIMEFORMAT= "yyyy-MM-dd'T'HH:mm:ssXXX"
 
+    /** Edge Indexing */
+    private static final INDEX_EDGES = true
+
     /** Delete an existing database */
     static public void delete_database(String dbpath) {
         if (!(dbpath.startsWith('plocal:'))) {
@@ -34,10 +37,8 @@ public class Database {
             if (factory.exists()) {
                 factory.drop()
             }
-
         } catch (Exception e) {
             log.error("Dropping database ${dbpath}", e )
-
         } finally {
             factory?.close()
         }
@@ -58,14 +59,15 @@ public class Database {
             cmd.setText("alter database DATETIMEFORMAT ${DATETIMEFORMAT}" )
             g.command(cmd).execute()
 
-            cmd.setText("alter database custom useLightweightEdges=false" )
-            g.command(cmd).execute()
+            if (INDEX_EDGES) {
+                cmd.setText("alter database custom useLightweightEdges=false" )
+                g.command(cmd).execute()
 
-            cmd.setText("alter database custom useVertexFieldsForEdgeLabels=false" )
-            g.command(cmd).execute()
+                cmd.setText("alter database custom useVertexFieldsForEdgeLabels=false" )
+                g.command(cmd).execute()
+            }
         } catch (Exception e) {
             log.error("Creating database ${dbpath}", e )
-
         } finally {
             g?.shutdown()
             factory?.close()
@@ -104,9 +106,11 @@ public class Database {
             v = g.createVertexType( "baz", "node" )
             v = g.createVertexType( "quux", "node" )
 
-            e = g.getEdgeType("E" )
-            e.createProperty( "in", OType.LINK )
-            e.createProperty( "out", OType.LINK )
+            if (INDEX_EDGES) {
+                e = g.getEdgeType("E" )
+                e.createProperty( "in", OType.LINK )
+                e.createProperty( "out", OType.LINK )
+            }
 
             e = g.createEdgeType("edge", "E")
             e.createProperty("began", OType.DATETIME)
@@ -119,7 +123,6 @@ public class Database {
             e = g.createEdgeType("tastes", "edge" )
         } catch (Exception e) {
             log.error("Creating schema", e )
-
         } finally {
             g?.shutdown()
             factory?.close()
@@ -149,20 +152,22 @@ public class Database {
             g.createKeyIndex("key", Vertex.class, new Parameter<String, String>("class", "baz"), UNIQUE_INDEX)
             g.createKeyIndex("key", Vertex.class, new Parameter<String, String>("class", "quux"), UNIQUE_INDEX)
 
-            cmd.setText("create index sees.unique on sees (in,out) unique" )
-            g.command(cmd).execute()
+            if (INDEX_EDGES) {
+                cmd.setText("create index sees.unique on sees (in,out) unique" )
+                g.command(cmd).execute()
 
-            cmd.setText("create index hears.unique on hears (in,out) unique" )
-            g.command(cmd).execute()
+                cmd.setText("create index hears.unique on hears (in,out) unique" )
+                g.command(cmd).execute()
 
-            cmd.setText("create index feels.unique on feels (in,out) unique" )
-            g.command(cmd).execute()
+                cmd.setText("create index feels.unique on feels (in,out) unique" )
+                g.command(cmd).execute()
 
-            cmd.setText("create index smells.unique on smells (in,out) unique" )
-            g.command(cmd).execute()
+                cmd.setText("create index smells.unique on smells (in,out) unique" )
+                g.command(cmd).execute()
 
-            cmd.setText("create index tastes.unique on tastes (in,out) unique" )
-            g.command(cmd).execute()
+                cmd.setText("create index tastes.unique on tastes (in,out) unique" )
+                g.command(cmd).execute()
+            }
 
         } catch (Exception e) {
             log.error("Creating indexes", e )

@@ -170,8 +170,7 @@ class GraphPerformance {
         if ( src == tgt ) {
             throw new IngestException ( String.format( 'No loopback edges allowed (%s == %s)', src, tgt ) )
         }
-
-        OrientEdge edge = findEdge(e.type, src, tgt)
+        OrientEdge edge = findEdge( e.type, src, tgt )
         if (edge == null) {
             if (create) {
                 edge = createEdge( e, src, tgt )
@@ -187,9 +186,19 @@ class GraphPerformance {
         return edge
     }
 
+    /** Find an existing edge */
+    OrientEdge findEdge(String type, OrientVertex src, OrientVertex tgt ) {
+        // NOTE: This is where the ingester spends 75+% of its time!!!
+        for (Edge eraw : src.getEdges( tgt, Direction.BOTH, type ) ) {
+            return (OrientEdge) eraw
+        }
+        return null
+    }
+
     /** Find an existing edge
      * This works, but doesn't use edge indexes */
     private OrientEdge findEdgeUsingSourceGetEdges(String type, OrientVertex src, OrientVertex tgt ) {
+        // NOTE: This is where the ingester spends 75+% of its time!!!
         def iterable = src.getEdges( tgt, Direction.BOTH, type )
         Iterator<Edge> edges = iterable.iterator()
         while ( edges.hasNext() ) {
@@ -200,21 +209,20 @@ class GraphPerformance {
 
     /** Find an existing edge
      * This appears to be doing the right thing, but doesn't work */
-    private OrientEdge findEdgeUsingGraphGetEdges(MyEdge e, OrientVertex src, OrientVertex tgt ) {
-        def indexname = "${e.type}.unique"
+    private OrientEdge findEdgeUsingGraphGetEdges(String type, OrientVertex src, OrientVertex tgt ) {
+        def indexname = "${type}.unique"
         def keys = new OCompositeKey( [src.id, tgt.id ])
         def iterable = graph.getEdges(indexname, keys )
         Iterator<Edge> edges = iterable.iterator()
         while ( edges.hasNext() ) {
-            Edge eraw = (Edge) edges.next()
-            return (OrientEdge) eraw
+            return (OrientEdge) edges.next()
         }
         return null
     }
 
     /** Find an existing edge */
-    private OrientEdge findEdgeUsingQuery(MyEdge e, OrientVertex src, OrientVertex tgt ) {
-        def indexname = "${e.type}.unique"
+    private OrientEdge findEdgeUsingQuery(String type, OrientVertex src, OrientVertex tgt ) {
+        def indexname = "${type}.unique"
         def keys = new OCompositeKey( [src.id, tgt.id ])
         OCommandSQL cmd = new OCommandSQL()
         def sql = "select rid from index:${indexname} where key=?"
@@ -224,7 +232,7 @@ class GraphPerformance {
         Iterator<Edge> edges = iterable.iterator()
         while ( edges.hasNext() ) {
             Edge eraw = (Edge) edges.next()
-            return (OrientEdge) eraw
+            return (OrientEdge) edges.next()
         }
         return null
     }
