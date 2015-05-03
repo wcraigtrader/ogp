@@ -4,7 +4,9 @@ This project is intended to measure performance of OrientDB under specific condi
 
 Build and run with Gradle:
 
-    ./gradlew run [ -Pmodel=radial|scatter|sprawl|mixed|light|heavy ] [ -POV=<orient version> ] [ -PGV=<groovy version> ] 
+    ./gradlew run [ -Pmodel=radial|scatter|sprawl|mixed|light|heavy ] [ -POV=<orient version> ] [ -PGV=<groovy version> ] [ -Pdbpath=<db path> ]
+
+    <dbpath> can be plocal:... or remote:... and defaults to memory:test
 
 or to run a series of models under varying conditions:
 
@@ -15,7 +17,7 @@ This has been tested with Orient versions 1.7.8 and 2.0.7, and Groovy versions 1
 To run as a standalone application (for profiling):
 
     ./gradlew installApp [ -POV=<orient version> ] [ -PGV=<groovy version> ]
-    build/install/orient-graph-performance/bin/orient-graph-performance [ radial|scatter|sprawl|mixed|light|heavy ]
+    build/install/orient-graph-performance/bin/orient-graph-performance [ radial|scatter|sprawl|mixed|light|heavy ] [ <dbpath> ]
 
 Detailed data will be written to CSV files in the `results` directory.  The CSV files are manually combined into 
 Excel worksheets with graphs for better visualization of the data. Logs are displayed and written to `performance.log`.
