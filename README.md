@@ -4,9 +4,12 @@ This project is intended to measure performance of OrientDB under specific condi
 
 Build and run with Gradle:
 
-    ./gradlew run [ -Pmodel=radial|scatter|sprawl|mixed|light|heavy ] [ -POV=<orient version> ] [ -PGV=<groovy version> ] [ -Pdbpath=<db path> ]
+    ./gradlew run [ <options> ]
 
-    <dbpath> can be plocal:... or remote:... and defaults to memory:test
+    -Pmodel=radial|scatter|sprawl|mixed|light|heavy    (defaults to radial)
+    -Pdbpath=[ memory:... | plocal:... | remote:... ]  (defaults to memory:test)
+    -POV=<orient version>
+    -PGV=<groovy version>
 
 or to run a series of models under varying conditions:
 
