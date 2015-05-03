@@ -1,5 +1,7 @@
 package com.akonizo.orientdb
 
+import groovy.util.logging.Slf4j
+
 import com.orientechnologies.orient.core.metadata.schema.OType
 import com.orientechnologies.orient.core.sql.OCommandSQL
 import com.tinkerpop.blueprints.Parameter
@@ -9,6 +11,7 @@ import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory
 import com.tinkerpop.blueprints.impls.orient.OrientGraphNoTx
 import com.tinkerpop.blueprints.impls.orient.OrientVertexType
 
+@Slf4j
 public class Database {
 
     /** Database Time Zone */
@@ -31,12 +34,12 @@ public class Database {
             if (factory.exists()) {
                 factory.drop()
             }
+
         } catch (Exception e) {
-            e.printStackTrace()
+            log.error("Dropping database ${dbpath}", e )
+
         } finally {
-            if (factory != null) {
-                factory.close()
-            }
+            factory?.close()
         }
     }
 
@@ -49,13 +52,20 @@ public class Database {
             g = factory.getNoTx()
             OCommandSQL cmd = new OCommandSQL()
 
-            cmd.setText("alter database TIMEZONE " + TIMEZONE)
+            cmd.setText("alter database TIMEZONE ${TIMEZONE}" )
             g.command(cmd).execute()
 
-            cmd.setText("alter database DATETIMEFORMAT " + DATETIMEFORMAT)
+            cmd.setText("alter database DATETIMEFORMAT ${DATETIMEFORMAT}" )
+            g.command(cmd).execute()
+
+            cmd.setText("alter database custom useLightweightEdges=false" )
+            g.command(cmd).execute()
+
+            cmd.setText("alter database custom useVertexFieldsForEdgeLabels=false" )
             g.command(cmd).execute()
         } catch (Exception e) {
-            e.printStackTrace()
+            log.error("Creating database ${dbpath}", e )
+
         } finally {
             g?.shutdown()
             factory?.close()
@@ -89,11 +99,14 @@ public class Database {
             v.createProperty("data6", OType.STRING )
             v.createProperty("data7", OType.STRING )
             v.createProperty("data8", OType.STRING )
-            
+
             v = g.createVertexType( "bar", "node" )
             v = g.createVertexType( "baz", "node" )
             v = g.createVertexType( "quux", "node" )
 
+            e = g.getEdgeType("E" )
+            e.createProperty( "in", OType.LINK )
+            e.createProperty( "out", OType.LINK )
 
             e = g.createEdgeType("edge", "E")
             e.createProperty("began", OType.DATETIME)
@@ -105,7 +118,8 @@ public class Database {
             e = g.createEdgeType("smells", "edge" )
             e = g.createEdgeType("tastes", "edge" )
         } catch (Exception e) {
-            e.printStackTrace()
+            log.error("Creating schema", e )
+
         } finally {
             g?.shutdown()
             factory?.close()
@@ -125,6 +139,8 @@ public class Database {
         OrientGraphFactory factory = new OrientGraphFactory(dbpath, 'admin', 'admin' )
         OrientGraphNoTx g = null
 
+        OCommandSQL cmd = new OCommandSQL()
+
         try {
             g = factory.getNoTx()
 
@@ -133,8 +149,23 @@ public class Database {
             g.createKeyIndex("key", Vertex.class, new Parameter<String, String>("class", "baz"), UNIQUE_INDEX)
             g.createKeyIndex("key", Vertex.class, new Parameter<String, String>("class", "quux"), UNIQUE_INDEX)
 
+            cmd.setText("create index sees.unique on sees (in,out) unique" )
+            g.command(cmd).execute()
+
+            cmd.setText("create index hears.unique on hears (in,out) unique" )
+            g.command(cmd).execute()
+
+            cmd.setText("create index feels.unique on feels (in,out) unique" )
+            g.command(cmd).execute()
+
+            cmd.setText("create index smells.unique on smells (in,out) unique" )
+            g.command(cmd).execute()
+
+            cmd.setText("create index tastes.unique on tastes (in,out) unique" )
+            g.command(cmd).execute()
+
         } catch (Exception e) {
-            e.printStackTrace()
+            log.error("Creating indexes", e )
 
         } finally {
             g?.shutdown()
