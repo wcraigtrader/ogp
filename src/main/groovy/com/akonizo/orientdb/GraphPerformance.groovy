@@ -220,7 +220,8 @@ class GraphPerformance {
         return null
     }
 
-    /** Find an existing edge */
+    /** Find an existing edge
+     * This appears to be doing the right thing, but doesn't work */
     private OrientEdge findEdgeUsingQuery(String type, OrientVertex src, OrientVertex tgt ) {
         def indexname = "${type}.unique"
         def keys = new OCompositeKey( [src.id, tgt.id ])
