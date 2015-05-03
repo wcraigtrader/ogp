@@ -5,6 +5,8 @@ import groovy.util.logging.Slf4j
 import org.hyperic.sigar.Sigar
 import org.slf4j.profiler.Profiler
 
+import com.orientechnologies.orient.core.index.OCompositeKey
+import com.orientechnologies.orient.core.sql.OCommandSQL
 import com.tinkerpop.blueprints.*
 import com.tinkerpop.blueprints.impls.orient.*
 
@@ -171,13 +173,8 @@ class GraphPerformance {
             throw new IngestException ( String.format( 'No loopback edges allowed (%s == %s)', src, tgt ) )
         }
 
-        // NOTE: This is where the ingester spends 75+% of its time!!!
-        for (Edge eraw : src.getEdges( tgt, Direction.BOTH, e.type ) ) {
-            if ( eraw.getLabel() == e.type ) {
-                edge = (OrientEdge) eraw
-                break
-            }
-        }
+        // Test point
+        edge = findEdgeUsingSourceGetEdges(e, src, tgt)
 
         if (edge == null) {
             if (create) {
@@ -192,6 +189,54 @@ class GraphPerformance {
         }
 
         return edge
+    }
+
+    /** Find an existing edge
+     * This works, but doesn't use edge indexes */
+    private OrientEdge findEdgeUsingSourceGetEdges(MyEdge e, OrientVertex src, OrientVertex tgt ) {
+        def iterable = src.getEdges( tgt, Direction.BOTH, e.type )
+        Iterator<Edge> edges = iterable.iterator()
+        while ( edges.hasNext() ) {
+            Edge eraw = (Edge) edges.next()
+            return (OrientEdge) eraw
+        }
+        return null
+    }
+
+    /** Find an existing edge
+     * This appears to be doing the right thing, but doesn't work */
+    private OrientEdge findEdgeUsingGraphGetEdges(MyEdge e, OrientVertex src, OrientVertex tgt ) {
+        def indexname = "${e.type}.unique"
+        def keys = new OCompositeKey( [src.id, tgt.id ])
+        def iterable = graph.getEdges(indexname, keys )
+        Iterator<Edge> edges = iterable.iterator()
+        while ( edges.hasNext() ) {
+            Edge eraw = (Edge) edges.next()
+            return (OrientEdge) eraw
+        }
+        return null
+    }
+
+    /** Find an existing edge */
+    private OrientEdge findEdgeUsingQuery(MyEdge e, OrientVertex src, OrientVertex tgt ) {
+        def indexname = "${e.type}.unique"
+        def keys = new OCompositeKey( [src.id, tgt.id ])
+        OCommandSQL cmd = new OCommandSQL()
+        def sql = "select rid from index:${indexname} where key=?"
+        cmd.setText( sql )
+        def request = graph.command( cmd )
+        def iterable = (Iterable<Edge>) request.execute( keys )
+        Iterator<Edge> edges = iterable.iterator()
+        while ( edges.hasNext() ) {
+            Edge eraw = (Edge) edges.next()
+            return (OrientEdge) eraw
+        }
+        return null
+    }
+
+    /** Find an existing edge */
+    private OrientEdge findEdgeUsingTraverse(MyEdge e, OrientVertex src, OrientVertex tgt ) {
+        return null
     }
 
     /** Create a new edge */
@@ -256,6 +301,10 @@ class GraphPerformance {
         def orient = OrientGraphFactory.class.package.implementationVersion
         log.info( "OrientDB: ${orient}" )
 
+        // def buffer = new ByteArrayOutputStream()
+        // OGlobalConfiguration.dumpConfiguration( new PrintStream( buffer ) )
+        // buffer.toString().split( '\n' ).each { log.info( it ) }
+
         osName = System.getProperty( 'os.name' ).replace( ' ', '').toLowerCase()
         javaName = version.split('_')[0].replace('.', '' )
         groovyName = gv.replace('.', '')
@@ -263,14 +312,18 @@ class GraphPerformance {
     }
 
     static void main( String[] args ) {
-        def model = 'radial'
         def dbpath = DBPATH
+        def model = 'radial'
         switch (args.length) {
             case 2:
                 dbpath = args[1]
             case 1:
                 model = args[0]
         }
+
+        log.info( "Command line args: ${args}" )
+        log.info( "Subgraph model: ${model}" )
+        log.info( "DB path: ${dbpath}" )
 
         gatherSystemInformation()
 
@@ -286,9 +339,8 @@ class GraphPerformance {
         metrics = new PrintWriter( new FileWriter( metricsFile ) )
         metrics.println('Chunk,Nodes,Edges,Node Time (ms),Edge Time (ms),Average Node Time (ms),Average Edge Time (ms)')
 
-
         Profiler profiler = new Profiler( 'GraphPerformance' )
-        GraphPerformance gp = new GraphPerformance( DBPATH )
+        GraphPerformance gp = new GraphPerformance( dbpath )
         try {
             profiler.start( 'Initialize data' )
             gp.initialize( SEED )

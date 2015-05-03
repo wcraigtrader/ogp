@@ -15,8 +15,11 @@ class GraphPerformanceTest {
 
     GraphPerformance gp
 
+    Date now = new Date()
     MyNode ann = new MyNode( 'foo', 'ann', 'someone' )
     MyNode bob = new MyNode( 'foo', 'bob', 'someone else' )
+    MyEdge light = new MyEdge( 'sees', ann, bob )
+    MyEdge heavy = new MyEdge( 'tastes', ann, bob, now, now )
 
     @Before
     void initialize() {
@@ -52,6 +55,33 @@ class GraphPerformanceTest {
 
         def node2 = gp.findNode( ann )
         assertThat( node2, is( node ) )
+    }
+
+    @Test
+    void testCreateEdge() {
+        gp.graph = gp.factory.getTx()
+        gp.graph.setAutoStartTx( false )
+
+        def oann = gp.createNode( ann )
+        def obob = gp.createNode( bob )
+        def edge = gp.createEdge( heavy, oann, obob )
+        // addNodePetals( ann )
+        // addNodePetals( bob )
+        gp.graph.commit()
+        gp.graph.shutdown()
+
+        gp.graph = gp.factory.getNoTx()
+        def edge2 = gp.findEdgeUsingQuery(heavy, oann, obob)
+        assertThat( edge2, is( edge ) )
+    }
+
+    private addNodePetals( MyNode center ) {
+        1.upto(100) {
+            def n = gp.data.randomNode('foo')
+            gp.findOrCreateNode(n)
+            def e = gp.data.randomEdge( center, n, 'tastes' )
+            gp.findOrCreateEdge(e)
+        }
     }
 
     @Test
