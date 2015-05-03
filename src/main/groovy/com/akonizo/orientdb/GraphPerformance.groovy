@@ -159,8 +159,6 @@ class GraphPerformance {
 
     /** Find an existing edge, or create a new one, updating all properties */
     OrientEdge findOrCreateEdge( MyEdge e, boolean create=true ) {
-        OrientEdge edge = null
-
         OrientVertex src = findNode( e.source )
         if (src == null) {
             throw new IngestException( String.format('Unable to find %s', e.source) )
@@ -173,9 +171,7 @@ class GraphPerformance {
             throw new IngestException ( String.format( 'No loopback edges allowed (%s == %s)', src, tgt ) )
         }
 
-        // Test point
-        edge = findEdgeUsingSourceGetEdges(e, src, tgt)
-
+        OrientEdge edge = findEdge(e.type, src, tgt)
         if (edge == null) {
             if (create) {
                 edge = createEdge( e, src, tgt )
@@ -193,12 +189,11 @@ class GraphPerformance {
 
     /** Find an existing edge
      * This works, but doesn't use edge indexes */
-    private OrientEdge findEdgeUsingSourceGetEdges(MyEdge e, OrientVertex src, OrientVertex tgt ) {
-        def iterable = src.getEdges( tgt, Direction.BOTH, e.type )
+    private OrientEdge findEdgeUsingSourceGetEdges(String type, OrientVertex src, OrientVertex tgt ) {
+        def iterable = src.getEdges( tgt, Direction.BOTH, type )
         Iterator<Edge> edges = iterable.iterator()
         while ( edges.hasNext() ) {
-            Edge eraw = (Edge) edges.next()
-            return (OrientEdge) eraw
+            return (OrientEdge) edges.next()
         }
         return null
     }

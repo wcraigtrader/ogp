@@ -58,20 +58,18 @@ class GraphPerformanceTest {
     }
 
     @Test
-    void testCreateEdge() {
+    void testFindEdge() {
         gp.graph = gp.factory.getTx()
         gp.graph.setAutoStartTx( false )
 
         def oann = gp.createNode( ann )
         def obob = gp.createNode( bob )
         def edge = gp.createEdge( heavy, oann, obob )
-        // addNodePetals( ann )
-        // addNodePetals( bob )
         gp.graph.commit()
         gp.graph.shutdown()
 
         gp.graph = gp.factory.getNoTx()
-        def edge2 = gp.findEdgeUsingQuery(heavy, oann, obob)
+        def edge2 = gp.findEdgeUsingQuery('tastes', oann, obob)
         assertThat( edge2, is( edge ) )
     }
 
