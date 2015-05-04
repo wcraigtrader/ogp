@@ -21,11 +21,14 @@ class GraphPerformanceTest {
     MyEdge light = new MyEdge( 'sees', ann, bob )
     MyEdge heavy = new MyEdge( 'tastes', ann, bob, now, now )
 
+    OrientVertex oann, obob
+    OrientEdge edge
+
     @Before
     void initialize() {
-        gp = new GraphPerformance( 'memory:test' ) // 'plocal:/Users/ctrader/db/test'
+        gp = new GraphPerformance( 'memory:test' ) // 'plocal:/Users/ctrader/db/test' // 'memory:test'
         gp.initialize( 123456789L )
-        gp.createDatabase()
+        gp.createDatabase( 'graph' )
     }
 
     @After
@@ -58,28 +61,39 @@ class GraphPerformanceTest {
     }
 
     @Test
-    void testFindEdge() {
-        gp.graph = gp.factory.getTx()
-        gp.graph.setAutoStartTx( false )
+    void testFindEdgeUsingSourceGetEdges() {
+        setupTwoNodesWithAnEdge()
 
-        def oann = gp.createNode( ann )
-        def obob = gp.createNode( bob )
-        def edge = gp.createEdge( heavy, oann, obob )
-        gp.graph.commit()
-        gp.graph.shutdown()
+        gp.graph = gp.factory.getNoTx()
+        def edge2 = gp.findEdgeUsingSourceGetEdges('tastes', oann, obob)
+        assertThat( edge2, is( edge ) )
+    }
+
+    @Test
+    void testFindEdgeUsingGraphGetEdges() {
+        setupTwoNodesWithAnEdge()
+
+        gp.graph = gp.factory.getNoTx()
+        def edge2 = gp.findEdgeUsingGraphGetEdges('tastes', oann, obob)
+        assertThat( edge2, is( edge ) )
+    }
+
+    @Test
+    void testFindEdgeUsingQuery() {
+        setupTwoNodesWithAnEdge()
 
         gp.graph = gp.factory.getNoTx()
         def edge2 = gp.findEdgeUsingQuery('tastes', oann, obob)
         assertThat( edge2, is( edge ) )
     }
 
-    private addNodePetals( MyNode center ) {
-        1.upto(100) {
-            def n = gp.data.randomNode('foo')
-            gp.findOrCreateNode(n)
-            def e = gp.data.randomEdge( center, n, 'tastes' )
-            gp.findOrCreateEdge(e)
-        }
+    @Test
+    void testFindEdge() {
+        setupTwoNodesWithAnEdge()
+
+        gp.graph = gp.factory.getNoTx()
+        def edge2 = gp.findEdge('tastes', oann, obob)
+        assertThat( edge2, is( edge ) )
     }
 
     @Test
@@ -108,4 +122,30 @@ class GraphPerformanceTest {
         def nodes = gp.graph.getVerticesOfClass( 'node' ).collect()
         assertThat( nodes.size(), is( 21+1 ) )
     }
+
+    // ----- Helper methods ---------------------------------------------------
+
+    private OrientEdge setupTwoNodesWithAnEdge() {
+        gp.graph = gp.factory.getTx()
+        gp.graph.setAutoStartTx( false )
+
+        oann = gp.createNode( ann )
+        obob = gp.createNode( bob )
+        edge = gp.createEdge( heavy, oann, obob )
+
+        gp.graph.commit()
+        gp.graph.shutdown()
+
+        return edge
+    }
+
+    private addNodePetals( MyNode center ) {
+        1.upto(100) {
+            def n = gp.data.randomNode('foo')
+            gp.findOrCreateNode(n)
+            def e = gp.data.randomEdge( center, n, 'tastes' )
+            gp.findOrCreateEdge(e)
+        }
+    }
+
 }
