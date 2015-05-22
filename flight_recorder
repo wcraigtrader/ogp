@@ -1,0 +1,18 @@
+#! /bin/bash
+
+prefix=profile
+
+now=$(date +"%Y%m%d-%H%M")
+
+fropts="stackdepth=20480"
+fropts="${fropts},defaultrecording=true"
+fropts="${fropts},dumponexit=true"
+fropts="${fropts},dumponexitpath=${prefix}-${now}.jfr"
+
+profiling=""
+profiling="${profiling} -XX:+UnlockCommercialFeatures"
+profiling="${profiling} -XX:+FlightRecorder"
+profiling="${profiling} -XX:FlightRecorderOptions=${fropts}"
+profiling="${profiling} -XX:StartFlightRecording=name=${prefix}"
+
+JAVA_OPTS=${profiling} $*
