@@ -1,5 +1,7 @@
 package com.akonizo.orientdb
 
+import groovy.util.logging.Slf4j
+
 import com.orientechnologies.orient.core.metadata.schema.OType
 import com.orientechnologies.orient.core.sql.OCommandSQL
 import com.tinkerpop.blueprints.Parameter
@@ -9,6 +11,7 @@ import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory
 import com.tinkerpop.blueprints.impls.orient.OrientGraphNoTx
 import com.tinkerpop.blueprints.impls.orient.OrientVertexType
 
+@Slf4j
 public class Database {
 
     /** Database Time Zone */
@@ -16,6 +19,9 @@ public class Database {
 
     /** Datebase Time Format */
     public static final String DATETIMEFORMAT= "yyyy-MM-dd'T'HH:mm:ssXXX"
+
+    /** Edge Indexing */
+    private static final INDEX_EDGES = true
 
     /** Delete an existing database */
     static public void delete_database(String dbpath) {
@@ -32,16 +38,14 @@ public class Database {
                 factory.drop()
             }
         } catch (Exception e) {
-            e.printStackTrace()
+            log.error("Dropping database ${dbpath}", e )
         } finally {
-            if (factory != null) {
-                factory.close()
-            }
+            factory?.close()
         }
     }
 
     /** Create an empty database */
-    static public void create_database(String dbpath) {
+    static public void create_database(String dbpath, boolean indexEdges=false ) {
         OrientGraphFactory factory = new OrientGraphFactory(dbpath, 'admin', 'admin' )
         OrientGraphNoTx g = null
 
@@ -49,13 +53,22 @@ public class Database {
             g = factory.getNoTx()
             OCommandSQL cmd = new OCommandSQL()
 
-            cmd.setText("alter database TIMEZONE " + TIMEZONE)
+            cmd.setText("alter database TIMEZONE ${TIMEZONE}" )
             g.command(cmd).execute()
 
-            cmd.setText("alter database DATETIMEFORMAT " + DATETIMEFORMAT)
+            cmd.setText("alter database DATETIMEFORMAT ${DATETIMEFORMAT}" )
             g.command(cmd).execute()
+
+            if (indexEdges) {
+                cmd.setText("alter database custom useLightweightEdges=false" )
+                g.command(cmd).execute()
+
+                cmd.setText("alter database custom useVertexFieldsForEdgeLabels=false" )
+                g.command(cmd).execute()
+            }
+
         } catch (Exception e) {
-            e.printStackTrace()
+            log.error("Creating database ${dbpath}", e )
         } finally {
             g?.shutdown()
             factory?.close()
@@ -63,7 +76,7 @@ public class Database {
     }
 
     /** Populate the schema for an empty database */
-    static public void create_schema(String dbpath) {
+    static public void create_schema(String dbpath, boolean indexEdges=false) {
 
         OrientGraphFactory factory = new OrientGraphFactory(dbpath, 'admin', 'admin')
         OrientGraphNoTx g = null
@@ -89,11 +102,16 @@ public class Database {
             v.createProperty("data6", OType.STRING )
             v.createProperty("data7", OType.STRING )
             v.createProperty("data8", OType.STRING )
-            
+
             v = g.createVertexType( "bar", "node" )
             v = g.createVertexType( "baz", "node" )
             v = g.createVertexType( "quux", "node" )
 
+            if (indexEdges) {
+                e = g.getEdgeType("E" )
+                e.createProperty( "in", OType.LINK )
+                e.createProperty( "out", OType.LINK )
+            }
 
             e = g.createEdgeType("edge", "E")
             e.createProperty("began", OType.DATETIME)
@@ -104,8 +122,9 @@ public class Database {
             e = g.createEdgeType("feels", "edge" )
             e = g.createEdgeType("smells", "edge" )
             e = g.createEdgeType("tastes", "edge" )
+
         } catch (Exception e) {
-            e.printStackTrace()
+            log.error("Creating schema", e )
         } finally {
             g?.shutdown()
             factory?.close()
@@ -113,17 +132,14 @@ public class Database {
     }
 
     /** Populate the indexes for a database */
-    static public void create_indexes(String dbpath) {
-        create_indexes(dbpath, true)
-    }
-
-    /** Populate the indexes for a database */
-    static public void create_indexes(String dbpath, boolean hashed) {
+    static public void create_indexes(String dbpath, boolean indexEdges=false) {
 
         final Parameter<?, ?> UNIQUE_INDEX = new Parameter<String, String>("type", "UNIQUE_HASH_INDEX") // was UNIQUE
 
         OrientGraphFactory factory = new OrientGraphFactory(dbpath, 'admin', 'admin' )
         OrientGraphNoTx g = null
+
+        OCommandSQL cmd = new OCommandSQL()
 
         try {
             g = factory.getNoTx()
@@ -133,8 +149,25 @@ public class Database {
             g.createKeyIndex("key", Vertex.class, new Parameter<String, String>("class", "baz"), UNIQUE_INDEX)
             g.createKeyIndex("key", Vertex.class, new Parameter<String, String>("class", "quux"), UNIQUE_INDEX)
 
+            if (indexEdges) {
+                cmd.setText("create index sees.unique on sees (out,in) unique" )
+                g.command(cmd).execute()
+
+                cmd.setText("create index hears.unique on hears (out,in) unique" )
+                g.command(cmd).execute()
+
+                cmd.setText("create index feels.unique on feels (out,in) unique" )
+                g.command(cmd).execute()
+
+                cmd.setText("create index smells.unique on smells (out,in) unique" )
+                g.command(cmd).execute()
+
+                cmd.setText("create index tastes.unique on tastes (out,in) unique" )
+                g.command(cmd).execute()
+            }
+
         } catch (Exception e) {
-            e.printStackTrace()
+            log.error("Creating indexes", e )
 
         } finally {
             g?.shutdown()

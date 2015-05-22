@@ -1,0 +1,9 @@
+#! /bin/bash
+
+rm -f performance.log
+
+MODEL=scatter
+for mode in none graph query ; do
+	./gradlew -q run -Pmodel=${MODEL} -Pindexes=${mode}
+	mv results/macosx-${MODEL}-207-243-170.csv results/macosx-${MODEL}-${mode}.csv
+done

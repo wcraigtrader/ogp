@@ -8,6 +8,7 @@ Build and run with Gradle:
 
     -Pmodel=radial|scatter|sprawl|mixed|light|heavy    (defaults to radial)
     -Pdbpath=[ memory:... | plocal:... | remote:... ]  (defaults to memory:test)
+    -Pindexing=[ query | graph ]  (defaults to no edge indexes)
     -POV=<orient version>
     -PGV=<groovy version>
 
@@ -20,7 +21,7 @@ This has been tested with Orient versions 1.7.8 and 2.0.7, and Groovy versions 1
 To run as a standalone application (for profiling):
 
     ./gradlew installApp [ -POV=<orient version> ] [ -PGV=<groovy version> ]
-    build/install/orient-graph-performance/bin/orient-graph-performance [ radial|scatter|sprawl|mixed|light|heavy ] [ <dbpath> ]
+    build/install/orient-graph-performance/bin/orient-graph-performance [ radial|scatter|sprawl|mixed|light|heavy ] [ <dbpath> ] [ <indexing> ]
 
 Detailed data will be written to CSV files in the `results` directory.  The CSV files are manually combined into 
 Excel worksheets with graphs for better visualization of the data. Logs are displayed and written to `performance.log`.
@@ -83,3 +84,10 @@ There are a number of models that represent different types of sub-graphs that c
 - `SubGraph`, `MyNode`, `MyEdge` -- These classes are POGOs to model a sub-graph.
 - `PerfCounter` -- This class captures and formats metrics about each ingest.
     
+## Profiling
+
+Oracle has a reasonably good profile tool [Java Mission Control](http://www.oracle.com/technetwork/java/javaseproducts/mission-control/java-mission-control-1998576.html) that is bundled with the Oracle JDK (7 & 8). If you want to use that to profile the appplication, I've included a script (`flight_recorder`) to make that easier. Use it as follows:
+
+    ./flight_recorder build/install/orient-graph-performance/bin/orient-graph-performance radial memory:test graph
+
+It will create a Java Flight Recorder (`.jfr`) file that can be analyzed with Java Mission Control (`$JAVA_HOME/bin/jmc`).

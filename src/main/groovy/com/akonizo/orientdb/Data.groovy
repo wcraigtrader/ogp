@@ -130,7 +130,8 @@ class Data {
     Iterator<SubGraph> specialGraphIterator( int count ) {
         return new SubGraphIterator( count ) {
                     SubGraph nextGraph( int position ) {
-                        return getRadialGraph( 500, 'tastes' )
+                        if ( position <= 50 ) return getScatterGraph( 500 )
+                        return getRadialGraph( 2*(position-50), 'tastes' )
                     }
                 }
     }

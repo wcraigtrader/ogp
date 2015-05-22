@@ -62,8 +62,9 @@ tasks.withType(GroovyCompile) {
 run {
     def arglist = []
     arglist << ( project.hasProperty('model') ? model : 'radial' )
-    if (project.hasProperty( 'dbpath') ) {
-        arglist << dbpath
+    arglist << ( project.hasProperty('dbpath') ? dbpath : 'memory:test' )
+    if ( project.hasProperty('indexes') ) {
+        arglist <<  indexes
     }
     args( arglist )
 }

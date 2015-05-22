@@ -5,6 +5,8 @@ import groovy.util.logging.Slf4j
 import org.hyperic.sigar.Sigar
 import org.slf4j.profiler.Profiler
 
+import com.orientechnologies.orient.core.index.OCompositeKey
+import com.orientechnologies.orient.core.sql.OCommandSQL
 import com.tinkerpop.blueprints.*
 import com.tinkerpop.blueprints.impls.orient.*
 
@@ -22,6 +24,7 @@ class GraphPerformance {
 
     Data data
     String dbpath
+    String indexes
 
     OrientGraphFactory factory
     OrientBaseGraph graph
@@ -42,12 +45,13 @@ class GraphPerformance {
     }
 
     /** Create a fresh database, with schema and indexes */
-    def createDatabase() {
-        log.info( "createDatabase( ${dbpath} )" )
+    def createDatabase( String mode=null ) {
+        indexes = mode
+        log.info( "createDatabase( ${dbpath}, ${indexes} )" )
         Database.delete_database( dbpath )
-        Database.create_database( dbpath )
-        Database.create_schema( dbpath )
-        Database.create_indexes( dbpath )
+        Database.create_database( dbpath, indexes!=null )
+        Database.create_schema( dbpath, indexes!=null )
+        Database.create_indexes( dbpath, indexes!=null )
 
         factory = new OrientGraphFactory(dbpath, 'admin', 'admin').setupPool(1, 10)
     }
@@ -169,7 +173,20 @@ class GraphPerformance {
             throw new IngestException ( String.format( 'No loopback edges allowed (%s == %s)', src, tgt ) )
         }
 
-        OrientEdge edge = findEdge( e.type, src, tgt )
+        // Note: findEdge implementation depends upon edge indexing method
+        OrientEdge edge = null
+        switch (indexes) {
+            case 'query' :
+                edge = findEdgeUsingQuery( e.type, src, tgt )
+                break
+            case 'graph' :
+                edge = findEdgeUsingGraphGetEdges( e.type, src, tgt )
+                break
+            default:
+                edge = findEdgeUsingSourceGetEdges( e.type, src, tgt )
+                break
+        }
+
         if (edge == null) {
             if (create) {
                 edge = createEdge( e, src, tgt )
@@ -185,12 +202,46 @@ class GraphPerformance {
         return edge
     }
 
-    /** Find an existing edge */
-    OrientEdge findEdge(String type, OrientVertex src, OrientVertex tgt ) {
+    // /** Find an existing edge */
+    // OrientEdge findEdge(String type, OrientVertex src, OrientVertex tgt ) {
+    //     // NOTE: This is where the ingester spends 75+% of its time!!!
+    //     for (Edge eraw : src.getEdges( tgt, Direction.BOTH, type ) ) {
+    //         return (OrientEdge) eraw
+    //     }
+    //     return null
+    // }
+
+    /** Find an existing edge
+     * This works, but doesn't use edge indexes */
+    OrientEdge findEdgeUsingSourceGetEdges(String type, OrientVertex src, OrientVertex tgt ) {
         // NOTE: This is where the ingester spends 75+% of its time!!!
         for (Edge eraw : src.getEdges( tgt, Direction.BOTH, type ) ) {
             return (OrientEdge) eraw
         }
+        return null
+    }
+
+    /** Find an existing edge
+     * This appears to be doing the right thing, but doesn't work */
+    OrientEdge findEdgeUsingGraphGetEdges(String type, OrientVertex src, OrientVertex tgt ) {
+        for (Edge eraw : graph.getEdges( "${type}.unique", new OCompositeKey( [src.id, tgt.id] ) ) ) {
+            return (OrientEdge) eraw
+        }
+        return null
+    }
+
+    /** Find an existing edge */
+    OrientEdge findEdgeUsingQuery(String type, OrientVertex src, OrientVertex tgt ) {
+        def cmd = new OCommandSQL("select from index:${type}.unique where key=?")
+        def key = new OCompositeKey( [src.id, tgt.id] )
+        for (Vertex result : graph.command( cmd ).execute( key )) {
+            return (OrientEdge) result.getProperty( 'rid' )
+        }
+        return null
+    }
+
+    /** Find an existing edge */
+    OrientEdge findEdgeUsingTraverse(MyEdge e, OrientVertex src, OrientVertex tgt ) {
         return null
     }
 
@@ -256,6 +307,10 @@ class GraphPerformance {
         def orient = OrientGraphFactory.class.package.implementationVersion
         log.info( "OrientDB: ${orient}" )
 
+        // def buffer = new ByteArrayOutputStream()
+        // OGlobalConfiguration.dumpConfiguration( new PrintStream( buffer ) )
+        // buffer.toString().split( '\n' ).each { log.info( it ) }
+
         osName = System.getProperty( 'os.name' ).replace( ' ', '').toLowerCase()
         javaName = version.split('_')[0].replace('.', '' )
         groovyName = gv.replace('.', '')
@@ -263,14 +318,22 @@ class GraphPerformance {
     }
 
     static void main( String[] args ) {
-        def model = 'radial'
+        def indexes = null
         def dbpath = DBPATH
+        def model = 'radial'
         switch (args.length) {
+            case 3:
+                indexes = args[2]
             case 2:
                 dbpath = args[1]
             case 1:
                 model = args[0]
         }
+
+        log.info( "Command line args: ${args}" )
+        log.info( "Subgraph model: ${model}" )
+        log.info( "DB path: ${dbpath}" )
+        log.info( "Indexes: ${indexes}" )
 
         gatherSystemInformation()
 
@@ -286,15 +349,14 @@ class GraphPerformance {
         metrics = new PrintWriter( new FileWriter( metricsFile ) )
         metrics.println('Chunk,Nodes,Edges,Node Time (ms),Edge Time (ms),Average Node Time (ms),Average Edge Time (ms)')
 
-
         Profiler profiler = new Profiler( 'GraphPerformance' )
-        GraphPerformance gp = new GraphPerformance( DBPATH )
+        GraphPerformance gp = new GraphPerformance( dbpath )
         try {
             profiler.start( 'Initialize data' )
             gp.initialize( SEED )
 
             profiler.start('Create database')
-            gp.createDatabase()
+            gp.createDatabase( indexes )
 
             profiler.start('Ingest data')
             gp.ingestData( model )
