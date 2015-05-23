@@ -63,8 +63,9 @@ public class Database {
                 cmd.setText("alter database custom useLightweightEdges=false" )
                 g.command(cmd).execute()
 
-                cmd.setText("alter database custom useVertexFieldsForEdgeLabels=false" )
-                g.command(cmd).execute()
+                // This looked like a good idea, but it wasn't -- it screws up Gremlin
+                // cmd.setText("alter database custom useVertexFieldsForEdgeLabels=false" )
+                // g.command(cmd).execute()
             }
 
         } catch (Exception e) {
