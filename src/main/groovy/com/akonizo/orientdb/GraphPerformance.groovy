@@ -52,6 +52,7 @@ class GraphPerformance {
         Database.create_database( dbpath, indexes!=null )
         Database.create_schema( dbpath, indexes!=null )
         Database.create_indexes( dbpath, indexes!=null )
+        Database.export_database( dbpath, '/tmp/ogp.export' )
 
         factory = new OrientGraphFactory(dbpath, 'admin', 'admin').setupPool(1, 10)
     }
