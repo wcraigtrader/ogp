@@ -7,7 +7,7 @@ echo Default Java version:
 whereis java
 java -version
 
-echo Java Home ($JAVA_HOME)
+echo "Java Home (${JAVA_HOME})"
 if [ -x ${JAVA_HOME)/bin/java ] ; then
 	${JAVA_HOME}/bin/java -version
 fi
