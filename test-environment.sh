@@ -2,16 +2,17 @@
 
 validate_java() {
 	varname=$1
-	dirname=${!varname}
-	echo "Testing ${varname} => ${dirname} ... "
-	if [ -d ${dirname} ] ; then
-		if [ -x ${dirname}/bin/java ] ; then
-			${dirname}/bin/java -version
+	expanded_name=${!varname}
+	=${expanded_name}/bin/java
+	echo "Testing ${varname} => ${expanded_name} ... "
+	if [ -d ${expanded_name} ] ; then
+		if [ -x ${java_pathname} ] ; then
+			${java_pathname} -version
 		else 
-			echo "No java executable found"
+			echo "No java executable found at ${java_pathname}"
 		fi
 	else 
-		echo "Not actually installed."
+		echo "Not actually installed at ${expanded_name}"
 	fi
 }
 
