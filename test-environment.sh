@@ -3,7 +3,7 @@
 validate_java() {
 	varname=$1
 	expanded_name=${!varname}
-	=${expanded_name}/bin/java
+	java_pathname=${expanded_name}/bin/java
 	echo "Testing ${varname} => ${expanded_name} ... "
 	if [ -d ${expanded_name} ] ; then
 		if [ -x ${java_pathname} ] ; then
