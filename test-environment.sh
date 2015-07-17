@@ -4,7 +4,7 @@ validate_java() {
 	varname=$1
 	expanded_name=$2
 	java_pathname=${expanded_name}/bin/java
-	echo "Testing ${varname} => ${expanded_name} ... "
+	echo -n "Testing ${varname} => ${expanded_name} ... "
 	if [ -d ${expanded_name} ] ; then
 		if [ -x ${java_pathname} ] ; then
 			${java_pathname} -version
