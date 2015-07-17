@@ -1,13 +1,9 @@
 // Allow selecting OrientDB and Groovy from the commandline
 def javaVersion = System.getProperty( 'java.version' )
-def groovyVersion = project.hasProperty("GV") ? GV : '2.4.3'
-def orientVersion = project.hasProperty('OV') ? OV : '2.0.7'
+def groovyVersion = project.hasProperty("GV") ? GV : '2.3.10'
+def orientVersion = project.hasProperty('OV') ? OV : '2.0.12'
 
-apply plugin: 'groovy'
-apply plugin: 'application'
-apply plugin: 'jacoco'
-apply plugin: 'eclipse'
-apply plugin: 'project-report'
+apply from: 'common.gradle'
 
 mainClassName = 'com.akonizo.orientdb.GraphPerformance'
 
@@ -40,14 +36,6 @@ configurations.all {
         if (details.requested.group == 'org.codehaus.groovy') {
             details.useVersion groovyVersion.split(':')[0]
         }
-    }
-}
-
-// Disable Groovy optimizations when testing code coverage
-gradle.taskGraph.whenReady { graph ->
-    if (graph.hasTask(':jacocoTestReport')) {
-        println "Disabling Groovy Optimizations for code coverage"
-        compileGroovy.groovyOptions.optimizationOptions.all = false
     }
 }
 

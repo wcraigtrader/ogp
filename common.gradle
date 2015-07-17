@@ -1,0 +1,67 @@
+// Common Gradle tasks
+
+apply plugin: 'java'
+apply plugin: 'groovy'
+apply plugin: 'eclipse'
+apply plugin: 'application'
+apply plugin: 'jacoco'
+apply plugin: 'project-report'
+
+// Task to create source directory structure
+task createDirs << {
+    // Cucumber directories
+    if ( plugins.hasPlugin ( 'com.github.samueltbrown.cucumber' ) ) {
+        glueDirs.each { dir ->
+            def path = new File( dir )
+            if (path.mkdirs()) {
+                println "Created ${path.absolutePath}."
+            }
+        }
+        
+        featureDirs.each { dir ->
+            def path = new File( dir )
+            if (path.mkdirs()) {
+                println "Created ${path.absolutePath}."
+            }
+        }
+        
+        sourceSets.maybeCreate( 'cucumber' )
+    }
+
+    // Source directories    
+    sourceSets.all { set ->
+        set.allSource.srcDirs.each { path ->
+            if (path.mkdirs()) {
+                println "Created ${path.absolutePath}."
+            }
+        }
+    }
+}
+
+// Disable Groovy optimizations when testing code coverage
+gradle.taskGraph.whenReady { graph ->
+    if (graph.hasTask(':jacocoTestReport')) {
+        println 'Disabling Groovy Optimizations for code coverage'
+        compileGroovy.groovyOptions.optimizationOptions.all = false
+    }
+}
+
+// Code Coverage reporting
+jacoco {
+    // toolVersion = '0.7.1.201405082137' // Gradle plugin
+    // toolVersion = '0.7.2.201409121644' // Eclipse plugin
+    toolVersion = '0.7.5.201505241946' // Latest release
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled false
+        csv.enabled false
+        // html.destination '${buildDir}/reports/coverage'
+    }
+}
+
+task coverage {
+    dependsOn( clean, test, jacocoTestReport )
+}
+
