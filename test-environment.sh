@@ -2,7 +2,7 @@
 
 validate_java() {
 	varname=$1
-	echo -n "Testing ${varname} => ${!varname} ... "
+	echo "Testing ${varname} => ${!varname} ... "
 	if [ -d ${!varname} ] ; then
 		if [ -x ${!varname}/bin/java ] ; then
 			${!varname}/bin/java -version
