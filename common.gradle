@@ -48,6 +48,7 @@ gradle.taskGraph.whenReady { graph ->
 
 // Code Coverage reporting
 jacoco {
+    // Check http://www.eclemma.org/jacoco/ for updates
     // toolVersion = '0.7.1.201405082137' // Gradle plugin
     // toolVersion = '0.7.2.201409121644' // Eclipse plugin
     toolVersion = '0.7.5.201505241946' // Latest release
@@ -64,4 +65,3 @@ jacocoTestReport {
 task coverage {
     dependsOn( clean, test, jacocoTestReport )
 }
-
