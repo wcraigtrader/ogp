@@ -52,6 +52,7 @@ class GraphPerformance {
         Database.create_database( dbpath, indexes!=null )
         Database.create_schema( dbpath, indexes!=null )
         Database.create_indexes( dbpath, indexes!=null )
+        Database.export_database( dbpath, '/tmp/ogp.export' )
 
         factory = new OrientGraphFactory(dbpath, 'admin', 'admin').setupPool(1, 10)
     }
@@ -202,14 +203,10 @@ class GraphPerformance {
         return edge
     }
 
-    // /** Find an existing edge */
-    // OrientEdge findEdge(String type, OrientVertex src, OrientVertex tgt ) {
-    //     // NOTE: This is where the ingester spends 75+% of its time!!!
-    //     for (Edge eraw : src.getEdges( tgt, Direction.BOTH, type ) ) {
-    //         return (OrientEdge) eraw
-    //     }
-    //     return null
-    // }
+    OrientEdge findEdge(String type, OrientVertex src, OrientVertex tgt ) {
+        return findEdgeUsingGraphGetEdges( type, src, tgt )
+    }
+
 
     /** Find an existing edge
      * This works, but doesn't use edge indexes */
@@ -221,8 +218,7 @@ class GraphPerformance {
         return null
     }
 
-    /** Find an existing edge
-     * This appears to be doing the right thing, but doesn't work */
+    /** Find an existing edge using an index */
     OrientEdge findEdgeUsingGraphGetEdges(String type, OrientVertex src, OrientVertex tgt ) {
         for (Edge eraw : graph.getEdges( "${type}.unique", new OCompositeKey( [src.id, tgt.id] ) ) ) {
             return (OrientEdge) eraw
@@ -230,7 +226,7 @@ class GraphPerformance {
         return null
     }
 
-    /** Find an existing edge */
+    /** Find an existing edge, using a SQL query */
     OrientEdge findEdgeUsingQuery(String type, OrientVertex src, OrientVertex tgt ) {
         def cmd = new OCommandSQL("select from index:${type}.unique where key=?")
         def key = new OCompositeKey( [src.id, tgt.id] )

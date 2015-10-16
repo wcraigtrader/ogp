@@ -2,10 +2,15 @@ package com.akonizo.orientdb
 
 import groovy.util.logging.Slf4j
 
+import com.orientechnologies.orient.core.command.OCommandOutputListener
+import com.orientechnologies.orient.core.db.tool.ODatabaseExport
+import com.orientechnologies.orient.core.index.OPropertyIndexDefinition
 import com.orientechnologies.orient.core.metadata.schema.OType
+import com.orientechnologies.orient.core.record.impl.ODocument
 import com.orientechnologies.orient.core.sql.OCommandSQL
 import com.tinkerpop.blueprints.Parameter
 import com.tinkerpop.blueprints.Vertex
+import com.tinkerpop.blueprints.impls.orient.OrientBaseGraph
 import com.tinkerpop.blueprints.impls.orient.OrientEdgeType
 import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory
 import com.tinkerpop.blueprints.impls.orient.OrientGraphNoTx
@@ -63,9 +68,8 @@ public class Database {
                 cmd.setText("alter database custom useLightweightEdges=false" )
                 g.command(cmd).execute()
 
-                // This looked like a good idea, but it wasn't -- it screws up Gremlin
-                // cmd.setText("alter database custom useVertexFieldsForEdgeLabels=false" )
-                // g.command(cmd).execute()
+                cmd.setText("alter database custom useVertexFieldsForEdgeLabels=true" )
+                g.command(cmd).execute()
             }
 
         } catch (Exception e) {
@@ -135,7 +139,9 @@ public class Database {
     /** Populate the indexes for a database */
     static public void create_indexes(String dbpath, boolean indexEdges=false) {
 
-        final Parameter<?, ?> UNIQUE_INDEX = new Parameter<String, String>("type", "UNIQUE_HASH_INDEX") // was UNIQUE
+        final Parameter<?,?> UNIQUE_INDEX = new Parameter<String, String>('type', 'UNIQUE_HASH_INDEX')
+        final Parameter<?,?> COLLATE_CI = new Parameter<String, String>('collate', 'ci')
+        Parameter<?,?> classname
 
         OrientGraphFactory factory = new OrientGraphFactory(dbpath, 'admin', 'admin' )
         OrientGraphNoTx g = null
@@ -145,10 +151,13 @@ public class Database {
         try {
             g = factory.getNoTx()
 
-            g.createKeyIndex("key", Vertex.class, new Parameter<String, String>("class", "foo"), UNIQUE_INDEX)
-            g.createKeyIndex("key", Vertex.class, new Parameter<String, String>("class", "bar"), UNIQUE_INDEX)
-            g.createKeyIndex("key", Vertex.class, new Parameter<String, String>("class", "baz"), UNIQUE_INDEX)
-            g.createKeyIndex("key", Vertex.class, new Parameter<String, String>("class", "quux"), UNIQUE_INDEX)
+            classname = new Parameter<String, String>("class", "foo")
+            g.createKeyIndex("key", Vertex.class, classname, UNIQUE_INDEX)
+            classname = new Parameter<String, String>("class", "bar")
+            g.createKeyIndex("key", Vertex.class, classname, UNIQUE_INDEX)
+
+            create_unique_ci_index( g, 'baz', 'key' )
+            create_unique_ci_index( g, 'quux', 'key' )
 
             if (indexEdges) {
                 cmd.setText("create index sees.unique on sees (out,in) unique" )
@@ -170,6 +179,47 @@ public class Database {
         } catch (Exception e) {
             log.error("Creating indexes", e )
 
+        } finally {
+            g?.shutdown()
+            factory?.close()
+        }
+    }
+
+    static public void create_unique_ci_index( OrientBaseGraph g, String classname, String key ) {
+        def index = new OPropertyIndexDefinition( classname, key, OType.STRING )
+        index.setCollate( 'ci' )
+
+        def db = g.rawGraph
+        def im = db.metadata.indexManager
+        def schema = db.metadata.schema
+        def cls = schema.getOrCreateClass(classname, schema.getClass('V') )
+        im.createIndex("${classname}.${key}", 'UNIQUE_HASH_INDEX', index, cls.getPolymorphicClusterIds(), null, new ODocument() )
+    }
+
+    static public void export_database( String dbpath, String output ) {
+        OrientGraphFactory factory = new OrientGraphFactory(dbpath, 'admin', 'admin' )
+        OrientGraphNoTx g = null
+
+        OCommandSQL cmd = new OCommandSQL()
+
+        try {
+            OCommandOutputListener listener = new OCommandOutputListener() {
+                @Override
+                public void onMessage(String iText) {
+                }
+            }
+
+            g = factory.getNoTx()
+
+            ODatabaseExport export = new ODatabaseExport(g.rawGraph, output, listener)
+            export.includeRecords = false
+            export.includeClusterDefinitions = false
+            export.compressionLevel = 0
+            export.exportDatabase()
+            export.close()
+
+        } catch (Exception e) {
+            log.error("Exporting database", e )
         } finally {
             g?.shutdown()
             factory?.close()

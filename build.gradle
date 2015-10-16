@@ -1,13 +1,9 @@
 // Allow selecting OrientDB and Groovy from the commandline
 def javaVersion = System.getProperty( 'java.version' )
-def groovyVersion = project.hasProperty("GV") ? GV : '2.4.3'
-def orientVersion = project.hasProperty('OV') ? OV : '2.0.7'
+def groovyVersion = project.hasProperty("GV") ? GV : '2.3.10'
+def orientVersion = project.hasProperty('OV') ? OV : '2.0.12'
 
-apply plugin: 'groovy'
-apply plugin: 'application'
-apply plugin: 'jacoco'
-apply plugin: 'eclipse'
-apply plugin: 'project-report'
+apply from: 'common.gradle'
 
 mainClassName = 'com.akonizo.orientdb.GraphPerformance'
 
@@ -29,7 +25,9 @@ dependencies {
     runtime fileTree(dir: "${rootDir}/lib/sigar", exclude: "*.jar")
 
     testCompile 'junit:junit:4.11'
-    testCompile 'org.hamcrest:hamcrest-core:1.3'
+    testCompile 'org.hamcrest:hamcrest-core:+'
+    testCompile 'org.hamcrest:hamcrest-library:+'
+    testCompile 'org.hamcrest:hamcrest-integration:+'
 }
 
 // Ensure everything's using the same version of Groovy
@@ -38,14 +36,6 @@ configurations.all {
         if (details.requested.group == 'org.codehaus.groovy') {
             details.useVersion groovyVersion.split(':')[0]
         }
-    }
-}
-
-// Disable Groovy optimizations when testing code coverage
-gradle.taskGraph.whenReady { graph ->
-    if (graph.hasTask(':jacocoTestReport')) {
-        println "Disabling Groovy Optimizations for code coverage"
-        compileGroovy.groovyOptions.optimizationOptions.all = false
     }
 }
 
