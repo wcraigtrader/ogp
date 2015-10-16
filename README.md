@@ -8,7 +8,7 @@ Build and run with Gradle:
 
     -Pmodel=radial|scatter|sprawl|mixed|light|heavy    (defaults to radial)
     -Pdbpath=[ memory:... | plocal:... | remote:... ]  (defaults to memory:test)
-    -Pindexing=[ query | graph ]  (defaults to no edge indexes)
+    -Pindexes=[ query | graph ]  (defaults to no edge indexes)
     -POV=<orient version>
     -PGV=<groovy version>
 
@@ -21,7 +21,7 @@ This has been tested with Orient versions 1.7.8 and 2.0.7, and Groovy versions 1
 To run as a standalone application (for profiling):
 
     ./gradlew installApp [ -POV=<orient version> ] [ -PGV=<groovy version> ]
-    build/install/orient-graph-performance/bin/orient-graph-performance [ radial|scatter|sprawl|mixed|light|heavy ] [ <dbpath> ] [ <indexing> ]
+    build/install/orient-graph-performance/bin/orient-graph-performance [ radial|scatter|sprawl|mixed|light|heavy ] [ <dbpath> ] [ <indexes> ]
 
 Detailed data will be written to CSV files in the `results` directory.  The CSV files are manually combined into 
 Excel worksheets with graphs for better visualization of the data. Logs are displayed and written to `performance.log`.

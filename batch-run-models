@@ -1,8 +1,8 @@
 #! /bin/bash
 
-ORIENTS="1.7.8 2.0.7"
-GROOVYS="1.8.9 2.4.3"
-MODELS="radial scatter sprawl mixed light heavy"
+ORIENTS="1.7.8 2.0.7 2.1.4"
+GROOVYS="2.4.5"
+MODELS="light heavy"
 
 rm -f performance.log
 
